@@ -2,10 +2,21 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FormInput from "../common/FormInput";
 import FormButton from "../common/FormButton";
-import authService from "../../services/authService";
+import { useFetch } from "../../hooks/useFetch";
 
 const SignupForm = ({ onSignup }) => {
   const navigate = useNavigate();
+
+  // Use useFetch instead of useAuth
+  const {
+    fetchData,
+    loading: isLoading,
+    error,
+  } = useFetch("/auth/register", {
+    method: "POST",
+    immediate: false, // Don't fetch immediately
+  });
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -15,7 +26,6 @@ const SignupForm = ({ onSignup }) => {
     lastName: "",
   });
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,11 +35,11 @@ const SignupForm = ({ onSignup }) => {
     });
 
     // Clear error when user starts typing again
-    if (errors[name]) {
-      setErrors({
-        ...errors,
-        [name]: "",
-      });
+    if (errors[name] || errors.general) {
+      const updatedErrors = { ...errors };
+      delete updatedErrors[name];
+      delete updatedErrors.general;
+      setErrors(updatedErrors);
     }
   };
 
@@ -44,6 +54,8 @@ const SignupForm = ({ onSignup }) => {
 
     if (!formData.password) {
       newErrors.password = "Password is required";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -74,10 +86,12 @@ const SignupForm = ({ onSignup }) => {
     // Create a copy of formData without confirmPassword
     const { confirmPassword, ...registrationData } = formData;
 
-    setIsLoading(true);
     try {
-      // Use the auth service to register with the filtered data
-      const response = await authService.register(registrationData);
+      console.log("Registering with data:", registrationData);
+
+      // Use fetchData from useFetch
+      const response = await fetchData(registrationData);
+      console.log("Registration successful:", response);
 
       // Navigate to waiting verification page with the email
       navigate("/waiting-verification", { state: { email: formData.email } });
@@ -86,20 +100,21 @@ const SignupForm = ({ onSignup }) => {
       if (onSignup) {
         onSignup(response);
       }
-    } catch (error) {
+    } catch (err) {
+      console.error("Registration error:", err);
       setErrors({
         ...errors,
-        general: error.message || "Registration failed",
+        general: err.message || "Registration failed",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
-    <form className="mt-8 grid gap-6" onSubmit={handleSubmit}>
-      {errors.general && (
-        <div className="text-red-500 text-sm text-center">{errors.general}</div>
+    <form className="my-6 grid  text- gap-6" onSubmit={handleSubmit}>
+      {(errors.general || error) && (
+        <div className=" text-goldenrod text-body text-center p-2 rounded-md">
+          {errors.general || error}
+        </div>
       )}
 
       <FormInput

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import authService from "../services/authService";
 import AuthLayout from "../components/auth/AuthLayout";
 import FormButton from "../components/common/FormButton";
+import { useFetch } from "../hooks/useFetch";
 
 const EmailVerification = () => {
   const [searchParams] = useSearchParams();
@@ -11,11 +11,20 @@ const EmailVerification = () => {
   const [message, setMessage] = useState("");
   const verificationAttempted = useRef(false);
 
+  // Get token from URL query parameters
+  const token = searchParams.get("token");
+
+  // Use useFetch hook with endpoint that includes the token
+  const { data, loading, error, fetchData } = useFetch(
+    token ? `/auth/verify-email?token=${token}` : "",
+    {
+      immediate: false, // Don't fetch immediately - we'll do it manually in useEffect
+    }
+  );
+
   useEffect(() => {
     // Prevent multiple verification attempts
     if (verificationAttempted.current) return;
-
-    const token = searchParams.get("token");
 
     if (!token) {
       setStatus("error");
@@ -26,29 +35,28 @@ const EmailVerification = () => {
     const verifyEmail = async () => {
       // Set the ref to prevent future attempts
       verificationAttempted.current = true;
+      setStatus("verifying");
 
       try {
-        const response = await authService.verifyEmail(token);
+        // Use fetchData from the useFetch hook
+        const response = await fetchData();
         console.log("Verification successful:", response);
 
         setStatus("success");
         setMessage(
           "Your email has been successfully verified! You can now log in."
         );
-      } catch (error) {
-        console.error("Verification failed:", error);
+      } catch (err) {
+        console.error("Verification failed:", err);
 
-        // If the error indicates the email is already verified, treat as success
-        if (
-          error.response?.status === 400 &&
-          error.response?.data?.message?.includes("already verified")
-        ) {
+        // If the error message indicates the email is already verified, treat as success
+        if (err.message && err.message.includes("already verified")) {
           setStatus("success");
           setMessage("Your email has already been verified. You can log in.");
         } else {
           setStatus("error");
           setMessage(
-            error.response?.data?.message ||
+            err.message ||
               "Verification failed. The token may be invalid or expired."
           );
         }
@@ -56,7 +64,7 @@ const EmailVerification = () => {
     };
 
     verifyEmail();
-  }, []); // Empty dependency array with useRef prevents multiple verification attempts
+  }, [token, fetchData]); // Add fetchData to dependencies
 
   const handleNavigate = () => {
     navigate(status === "success" ? "/login" : "/");

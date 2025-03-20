@@ -8,15 +8,25 @@
   --color-sepia: #633d00;
   --color-medium-aquamarine: #5fe4c1;
   --color-dark-slate-gray: #185656;
+  --color-gray: #99a1af;
+  --color-dark-gray: #6a7282;
+
+  /* Font size variables */
+  --text-heading-1: 2.5rem; /* 40px */
+  --text-heading-2: 2rem; /* 32px */
+  --text-heading-3: 1.5rem; /* 24px */
+  --text-heading-4: 1.25rem; /* 20px */
+  --text-body: 1rem; /* 16px */
+  --text-body-sm: 0.875rem; /* 14px */
+  --text-caption: 0.75rem; /* 12px */
+  --text-tiny: 0.625rem; /* 10px */
+
   --font-display: "Pixelify Sans", sans-serif;
 }
 
 * {
   font-family: var(--font-display);
   font-weight: bolder;
-}
-
-* {
   text-transform: uppercase;
 }
 
@@ -32,9 +42,11 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 30px #0d3b3b inset !important; /* Match your desired background color */
-  -webkit-text-fill-color: #d4a017 !important; /* Match your desired text color */
+  -webkit-text-fill-color: var(
+    --color-goldenrod
+  ) !important; /* Match your desired text color */
   transition: background-color 5000s ease-in-out 0s; /* Make the background persistent */
-  caret-color: #d4a017; /* Cursor color */
+  caret-color: var(--color-goldenrod); /* Cursor color */
 }
 
 button {

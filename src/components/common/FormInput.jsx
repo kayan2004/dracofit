@@ -37,8 +37,8 @@ const FormInput = ({
           value={value}
           onChange={onChange}
           required={required}
-          className={`form-input bg-midnight-green appearance-none relative block w-full p-3 text-goldenrod text-md
-              placeholder-gray-500 focus:outline-none focus:bg-midnight-green-darker input-case placeholder:uppercase placeholder:tracking-normal
+          className={`form-input bg-midnight-green appearance-none relative block w-full p-3 text-goldenrod text-body n
+              placeholder-gray focus:outline-none focus:bg-midnight-green-darker input-case placeholder:uppercase placeholder:tracking-normal
               ${isPassword ? "pr-10" : ""}`}
           placeholder={label}
           style={
@@ -90,7 +90,7 @@ const FormInput = ({
           </button>
         )}
       </div>
-      {error && <p className="mt-1 text-xs text-goldenrod">{error}</p>}
+      {error && <p className="mt-1 text-caption text-goldenrod">{error}</p>}
     </div>
   );
 };

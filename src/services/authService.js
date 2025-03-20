@@ -25,16 +25,24 @@ class AuthService {
   async login(credentials) {
     try {
       console.log("Login credentials:", credentials);
-      const response = await api.post("/auth/signin", credentials);
+      // Changed from /auth/signin to /auth/login to match backend
+      const response = await api.post("/auth/login", credentials);
       console.log("Login response:", response.data);
-      if (response.data.access_token) {
-        localStorage.setItem("token", response.data.access_token);
 
-        // Store user info if included in response
-        if (response.data.user) {
-          localStorage.setItem("user", JSON.stringify(response.data.user));
-        }
+      // Handle both formats that the backend might send
+      if (response.data.accessToken) {
+        localStorage.setItem("token", response.data.accessToken);
+        console.log("Stored token:", response.data.accessToken);
+      } else if (response.data.access_token) {
+        localStorage.setItem("token", response.data.access_token);
+        console.log("Stored token:", response.data.access_token);
       }
+
+      // Store user info if included in response
+      if (response.data.user) {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+      }
+
       return response.data;
     } catch (error) {
       console.error("Login error:", error);
@@ -47,7 +55,8 @@ class AuthService {
   // Register new user
   async register(userData) {
     try {
-      const response = await api.post("/auth/signup", userData);
+      // Changed from /auth/signup to /auth/register to match backend
+      const response = await api.post("/auth/register", userData);
       return response.data;
     } catch (error) {
       console.error("Registration error:", error);

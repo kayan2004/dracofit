@@ -3,31 +3,46 @@ import { Link } from "react-router-dom";
 import AuthLayout from "../components/auth/AuthLayout";
 import FormInput from "../components/common/FormInput";
 import FormButton from "../components/common/FormButton";
-import authService from "../services/authService";
+import { useFetch } from "../hooks/useFetch";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [validationError, setValidationError] = useState("");
+
+  // Use the useFetch hook for password reset request
+  const {
+    fetchData,
+    loading: isLoading,
+    error,
+  } = useFetch("/auth/forgot-password", {
+    method: "POST",
+    immediate: false, // Don't fetch on component mount
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Form validation
     if (!email) {
-      setError("Email is required");
+      setValidationError("Email is required");
       return;
     }
 
-    setIsLoading(true);
-    setError("");
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setValidationError("Please enter a valid email address");
+      return;
+    }
+
+    setValidationError("");
 
     try {
-      await authService.forgotPassword(email);
+      // Use fetchData from useFetch hook
+      await fetchData({ email });
       setIsSubmitted(true);
     } catch (err) {
-      setError(err.message || "Failed to send reset link. Please try again.");
-    } finally {
-      setIsLoading(false);
+      // Error is already handled by the hook
+      console.error("Failed to send reset link:", err);
     }
   };
 
@@ -77,9 +92,9 @@ const ForgotPassword = () => {
       </p>
 
       <form onSubmit={handleSubmit} className="grid gap-4">
-        {error && (
+        {(validationError || error) && (
           <div className="bg-customDarkGold/20 border border-customGold text-goldenrod text-md text-center p-2 rounded-md">
-            {error}
+            {validationError || error}
           </div>
         )}
 
@@ -89,7 +104,10 @@ const ForgotPassword = () => {
           name="email"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setValidationError("");
+          }}
           required
         />
 

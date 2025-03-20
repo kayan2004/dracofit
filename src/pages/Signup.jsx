@@ -4,8 +4,12 @@ import AuthLayout from "../components/auth/AuthLayout";
 import SignupForm from "../components/auth/SignupForm";
 import AuthSwitch from "../components/auth/AuthSwitch";
 const Signup = () => {
+  const authContent = {
+    title: "Register",
+    paragraph: "Create a new account",
+  };
   return (
-    <AuthLayout title="Create Account">
+    <AuthLayout content={authContent}>
       <SignupForm />
       <AuthSwitch isLogin={false} />
     </AuthLayout>

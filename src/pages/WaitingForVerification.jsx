@@ -1,18 +1,27 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import authService from "../services/authService";
 import AuthLayout from "../components/auth/AuthLayout";
 import FormButton from "../components/common/FormButton";
+import { useFetch } from "../hooks/useFetch";
 
 const WaitingForVerification = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState("");
   const [resendError, setResendError] = useState("");
 
   // Get email from location state if available
   const email = location.state?.email || "";
+
+  // Initialize useFetch for resending verification email
+  const {
+    fetchData: resendVerification,
+    loading: isResending,
+    error,
+  } = useFetch("/auth/resend-verification", {
+    method: "POST",
+    immediate: false, // Don't fetch on component mount
+  });
 
   const handleResendVerification = async () => {
     if (!email) {
@@ -22,20 +31,19 @@ const WaitingForVerification = () => {
       return;
     }
 
-    setIsResending(true);
+    // Clear previous messages
     setResendMessage("");
     setResendError("");
 
     try {
-      await authService.resendVerification(email);
+      // Use fetchData from useFetch hook
+      await resendVerification({ email });
       setResendMessage("Verification email sent! Please check your inbox.");
     } catch (error) {
       setResendError(
         error.message ||
           "Failed to resend verification email. Please try again later."
       );
-    } finally {
-      setIsResending(false);
     }
   };
 
@@ -129,9 +137,9 @@ const WaitingForVerification = () => {
           </div>
         )}
 
-        {resendError && (
+        {(resendError || error) && (
           <div className="mt-4 p-3 bg-midnight-green-darker border border-goldenrod text-goldenrod rounded-md text-sm">
-            {resendError}
+            {resendError || error}
           </div>
         )}
       </div>

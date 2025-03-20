@@ -5,9 +5,17 @@ import LoginForm from "../components/auth/LoginForm";
 import AuthSwitch from "../components/auth/AuthSwitch";
 
 const Login = () => {
+  const handleLogin = (userData) => {
+    console.log("User logged in:", userData);
+    // Any additional actions on successful login
+  };
+  const authContent = {
+    title: "Welcome Back !",
+    paragraph: "Login to your account",
+  };
   return (
-    <AuthLayout title="Login">
-      <LoginForm />
+    <AuthLayout content={authContent}>
+      <LoginForm onLogin={handleLogin} />
 
       <AuthSwitch isLogin={true} />
     </AuthLayout>

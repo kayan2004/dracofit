@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import AuthLayout from "../components/auth/AuthLayout";
 import FormInput from "../components/common/FormInput";
 import FormButton from "../components/common/FormButton";
-import authService from "../services/authService";
+import { useFetch } from "../hooks/useFetch";
 
 const ResetPassword = () => {
   // Extract token from query parameters
@@ -18,8 +18,17 @@ const ResetPassword = () => {
     confirmPassword: "",
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // Use useFetch hook with immediate:false so it doesn't fetch on mount
+  const {
+    fetchData,
+    loading: isLoading,
+    error,
+  } = useFetch(`/auth/reset-password?token=${token}`, {
+    method: "POST",
+    immediate: false,
+  });
 
   // Check if token exists
   useEffect(() => {
@@ -72,8 +81,6 @@ const ResetPassword = () => {
 
     if (!validate()) return;
 
-    setIsLoading(true);
-
     try {
       // Log the request details for debugging
       console.log("Reset password request details:", {
@@ -81,18 +88,18 @@ const ResetPassword = () => {
         passwordLength: formData.password.length,
       });
 
-      // Match the parameter name with what your API expects
-      await authService.resetPassword(token, formData.password);
+      // Use fetchData from useFetch hook
+      // Changed to use "newPassword" instead of "password" in the API request
+      await fetchData({ newPassword: formData.password });
+
       console.log("Password reset successful!");
       setIsSubmitted(true);
-    } catch (error) {
-      console.error("Password reset failed:", error);
+    } catch (err) {
+      console.error("Password reset failed:", err);
       setErrors({
         ...errors,
-        general: error.message || "Password reset failed. Please try again.",
+        general: err.message || "Password reset failed. Please try again.",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -140,9 +147,9 @@ const ResetPassword = () => {
       </p>
 
       <form onSubmit={handleSubmit} className="grid gap-4">
-        {errors.general && (
+        {(errors.general || error) && (
           <div className="bg-customDarkGold/20 border border-customGold text-goldenrod text-md text-center p-2 rounded-md">
-            {errors.general}
+            {errors.general || error}
           </div>
         )}
 
