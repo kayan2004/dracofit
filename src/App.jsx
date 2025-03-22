@@ -11,6 +11,9 @@ import ForgotPassword from "./pages/ForgetPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Exercises from "./pages/Exercises";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import Exercise from "./pages/Exercise";
+import Workouts from "./pages/workouts";
+import WorkoutForm from "./components/workouts/WorkoutForm";
 // Import other pages as needed
 
 function App() {
@@ -28,13 +31,20 @@ function App() {
             path="/waiting-verification"
             element={<WaitingForVerification />}
           />
-
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/exercises" element={<Exercises />} />
             {/* Add other protected routes here */}
           </Route>
+          <Route element={<ProtectedRoute />}>
+            <Route path="/exercises/:id" element={<Exercise />} />
+          </Route>
+          <Route element={<ProtectedRoute />}>
+            <Route path="/workouts" element={<Workouts />} />
+          </Route>
 
+          <Route path="/workouts/create" element={<WorkoutForm />} />
+          <Route path="/workouts/edit/:id" element={<WorkoutForm />} />
           {/* Default route */}
           {/* <Route
             path="/"

@@ -71,65 +71,64 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
-  // Verify email function
-  // const verifyEmail = async (token) => {
-  //   setLoading(true);
-  //   setError(null);
-  //   try {
-  //     const response = await authService.verifyEmail(token);
-  //     return response;
-  //   } catch (err) {
-  //     setError(err.message || "Email verification failed");
-  //     throw err;
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  const verifyEmail = async (token) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await authService.verifyEmail(token);
+      return response;
+    } catch (err) {
+      setError(err.message || "Email verification failed");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // // Request password reset
-  // const forgotPassword = async (email) => {
-  //   setLoading(true);
-  //   setError(null);
-  //   try {
-  //     const response = await authService.forgotPassword(email);
-  //     return response;
-  //   } catch (err) {
-  //     setError(err.message || "Password reset request failed");
-  //     throw err;
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  // Request password reset
+  const forgotPassword = async (email) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await authService.forgotPassword(email);
+      return response;
+    } catch (err) {
+      setError(err.message || "Password reset request failed");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // // Reset password
-  // const resetPassword = async (token, newPassword) => {
-  //   setLoading(true);
-  //   setError(null);
-  //   try {
-  //     const response = await authService.resetPassword(token, newPassword);
-  //     return response;
-  //   } catch (err) {
-  //     setError(err.message || "Password reset failed");
-  //     throw err;
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  // Reset password
+  const resetPassword = async (token, newPassword) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await authService.resetPassword(token, newPassword);
+      return response;
+    } catch (err) {
+      setError(err.message || "Password reset failed");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // // Resend verification email
-  // const resendVerification = async (email) => {
-  //   setLoading(true);
-  //   setError(null);
-  //   try {
-  //     const response = await authService.resendVerification(email);
-  //     return response;
-  //   } catch (err) {
-  //     setError(err.message || "Failed to resend verification email");
-  //     throw err;
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  // Resend verification email
+  const resendVerification = async (email) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await authService.resendVerification(email);
+      return response;
+    } catch (err) {
+      setError(err.message || "Failed to resend verification email");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Clear any auth errors
   const clearError = () => {
@@ -145,10 +144,10 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    // verifyEmail,
-    // forgotPassword,
-    // resetPassword,
-    // resendVerification,
+    verifyEmail,
+    forgotPassword,
+    resetPassword,
+    resendVerification,
     clearError,
   };
 

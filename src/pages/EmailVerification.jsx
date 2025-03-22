@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/auth/AuthLayout";
-import FormButton from "../components/common/FormButton";
-import { useFetch } from "../hooks/useFetch";
+import { useAuth } from "../hooks/useAuth";
+import VerificationIcon from "../components/icons/VerificationIcon";
+import FailedVerificationIcon from "../components/icons/FailedVerificationIcon";
+import StatusDisplay from "../components/auth/StatusDisplay";
 
 const EmailVerification = () => {
   const [searchParams] = useSearchParams();
@@ -14,13 +16,8 @@ const EmailVerification = () => {
   // Get token from URL query parameters
   const token = searchParams.get("token");
 
-  // Use useFetch hook with endpoint that includes the token
-  const { data, loading, error, fetchData } = useFetch(
-    token ? `/auth/verify-email?token=${token}` : "",
-    {
-      immediate: false, // Don't fetch immediately - we'll do it manually in useEffect
-    }
-  );
+  // Use the useAuth hook instead of useFetch
+  const { verifyEmail, loading, error } = useAuth();
 
   useEffect(() => {
     // Prevent multiple verification attempts
@@ -32,14 +29,14 @@ const EmailVerification = () => {
       return;
     }
 
-    const verifyEmail = async () => {
+    const handleVerification = async () => {
       // Set the ref to prevent future attempts
       verificationAttempted.current = true;
       setStatus("verifying");
 
       try {
-        // Use fetchData from the useFetch hook
-        const response = await fetchData();
+        // Use verifyEmail from the useAuth hook
+        const response = await verifyEmail(token);
         console.log("Verification successful:", response);
 
         setStatus("success");
@@ -63,15 +60,31 @@ const EmailVerification = () => {
       }
     };
 
-    verifyEmail();
-  }, [token, fetchData]); // Add fetchData to dependencies
+    handleVerification();
+  }, [token, verifyEmail]);
 
   const handleNavigate = () => {
     navigate(status === "success" ? "/login" : "/");
   };
 
+  const content = {
+    title:
+      status === "verifying"
+        ? "Verifying Your Email"
+        : status === "success"
+        ? "Email Verified"
+        : "Verification Failed",
+
+    paragraph:
+      status === "verifying"
+        ? "Please wait while we confirm your email address..."
+        : status === "success"
+        ? "Your account is now active and ready to use."
+        : "We encountered an issue with your verification link.",
+  };
+
   return (
-    <AuthLayout title="Email Verification">
+    <AuthLayout content={content}>
       <div className="mt-8 flex flex-col items-center">
         {status === "verifying" && (
           <div className="flex flex-col items-center">
@@ -83,49 +96,25 @@ const EmailVerification = () => {
         )}
 
         {status === "success" && (
-          <div className="flex flex-col items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-16 w-16 text-medium-aquamarine"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <p className="mt-4 text-lg text-center text-goldenrod">{message}</p>
-            <FormButton onClick={handleNavigate} className="mt-6" fullWidth>
-              Go to Login
-            </FormButton>
-          </div>
+          <StatusDisplay
+            icon={<VerificationIcon />}
+            message={message}
+            buttonText="Go to Login"
+            onButtonClick={handleNavigate}
+            messageClassName="text-body"
+            buttonProps={{ styles: "p-4 mt-3" }}
+          />
         )}
 
         {status === "error" && (
-          <div className="flex flex-col items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-16 w-16 text-goldenrod"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <p className="mt-4 text-lg text-center text-goldenrod">{message}</p>
-            <FormButton onClick={handleNavigate} className="mt-6" fullWidth>
-              Back to Home
-            </FormButton>
-          </div>
+          <StatusDisplay
+            icon={<FailedVerificationIcon />}
+            message={message}
+            buttonText="Back to Home"
+            onButtonClick={handleNavigate}
+            messageClassName="text-body"
+            buttonProps={{ styles: "p-4 mt-3" }}
+          />
         )}
       </div>
     </AuthLayout>

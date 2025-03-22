@@ -6,7 +6,9 @@ const AuthLayout = ({ children, content }) => {
       <div className="max-w-md w-full grid ">
         <div className="">
           <h2 className="text-goldenrod text-heading-2">{content.title}</h2>
-          <p className="text-gray text-heading-4"> {content.paragraph}</p>
+          {content.paragraph && (
+            <p className="text-gray text-heading-4"> {content.paragraph}</p>
+          )}
         </div>
         {children}
       </div>

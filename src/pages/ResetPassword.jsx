@@ -4,6 +4,7 @@ import AuthLayout from "../components/auth/AuthLayout";
 import FormInput from "../components/common/FormInput";
 import FormButton from "../components/common/FormButton";
 import { useFetch } from "../hooks/useFetch";
+import VerificationIcon from "../components/icons/VerificationIcon";
 
 const ResetPassword = () => {
   // Extract token from query parameters
@@ -103,25 +104,16 @@ const ResetPassword = () => {
     }
   };
 
+  const content = {
+    title: "Create New Password",
+  };
+
   if (isSubmitted) {
     return (
-      <AuthLayout title="Password Reset Successful">
-        <div className="bg-midnight-green p-6 rounded-lg text-center">
-          <div className="mb-4">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-16 w-16 mx-auto text-goldenrod"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+      <AuthLayout content={content}>
+        <div className="bg-midnight-green p-6 rounded-lg text-center mt-6">
+          <div className="flex items-center justify-center mb-4">
+            <VerificationIcon styles="flex " />
           </div>
           <p className="text-goldenrod mb-4">
             Your password has been successfully reset.
@@ -141,14 +133,14 @@ const ResetPassword = () => {
   }
 
   return (
-    <AuthLayout title="Create New Password">
+    <AuthLayout content={content}>
       <p className="text-gray-400 mb-6 text-center">
         Enter your new password below.
       </p>
 
       <form onSubmit={handleSubmit} className="grid gap-4">
         {(errors.general || error) && (
-          <div className="bg-customDarkGold/20 border border-customGold text-goldenrod text-md text-center p-2 rounded-md">
+          <div className=" text-goldenrod text-body text-center p-2 rounded-md">
             {errors.general || error}
           </div>
         )}
@@ -179,14 +171,14 @@ const ResetPassword = () => {
           Reset Password
         </FormButton>
 
-        <div className="text-center mt-4">
+        {/* <div className="text-center mt-4">
           <Link
             to="/login"
             className="text-goldenrod hover:text-dark-goldenrod"
           >
             Back to Login
           </Link>
-        </div>
+        </div> */}
       </form>
     </AuthLayout>
   );

@@ -255,8 +255,8 @@ const Exercises = () => {
     <div className="min-h-screen bg-dark-slate-gray text-white p-6">
       {/* Simple Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-goldenrod">Exercise Library</h1>
-        <p className="text-gray-400 mt-2">
+        <h1 className="text-heading-2 text-goldenrod">Exercise Library</h1>
+        <p className="text-gray mt-2">
           Browse through our collection of exercises
         </p>
       </div>
@@ -317,7 +317,7 @@ const Exercises = () => {
         <div className="flex justify-between items-center mb-4">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center text-goldenrod hover:text-yellow-500 transition-colors"
+            className="flex items-center text-goldenrod hover:text-dark-goldenrod transition-colors"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -344,7 +344,7 @@ const Exercises = () => {
           {activeFilterCount > 0 && (
             <button
               onClick={clearFilters}
-              className="text-sm text-gray-400 hover:text-white transition-colors"
+              className="text-sm text-gray-400 hover:text-dark-gray transition-colors"
             >
               Clear All Filters
             </button>

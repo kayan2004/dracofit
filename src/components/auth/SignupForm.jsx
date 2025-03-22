@@ -2,20 +2,13 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FormInput from "../common/FormInput";
 import FormButton from "../common/FormButton";
-import { useFetch } from "../../hooks/useFetch";
+import { useAuth } from "../../hooks/useAuth";
 
 const SignupForm = ({ onSignup }) => {
   const navigate = useNavigate();
 
-  // Use useFetch instead of useAuth
-  const {
-    fetchData,
-    loading: isLoading,
-    error,
-  } = useFetch("/auth/register", {
-    method: "POST",
-    immediate: false, // Don't fetch immediately
-  });
+  // Use useAuth hook for authentication
+  const { register, loading: isLoading, error: authError } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -89,8 +82,8 @@ const SignupForm = ({ onSignup }) => {
     try {
       console.log("Registering with data:", registrationData);
 
-      // Use fetchData from useFetch
-      const response = await fetchData(registrationData);
+      // Use register method from useAuth
+      const response = await register(registrationData);
       console.log("Registration successful:", response);
 
       // Navigate to waiting verification page with the email
@@ -110,10 +103,10 @@ const SignupForm = ({ onSignup }) => {
   };
 
   return (
-    <form className="my-6 grid  text- gap-6" onSubmit={handleSubmit}>
-      {(errors.general || error) && (
-        <div className=" text-goldenrod text-body text-center p-2 rounded-md">
-          {errors.general || error}
+    <form className="my-6 grid text- gap-6" onSubmit={handleSubmit}>
+      {(errors.general || authError) && (
+        <div className="text-goldenrod text-body text-center p-2 rounded-md">
+          {errors.general || authError}
         </div>
       )}
 
