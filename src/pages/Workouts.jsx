@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import workoutsService from "../services/workoutsService";
 import WorkoutCard from "../components/workouts/WorkoutCard";
 import { useAuth } from "../hooks/useAuth";
+import WorkoutDetails from "../components/workouts/WorkoutDetails";
 
 const Workouts = () => {
+  const { id } = useParams();
   // Get authentication data from useAuth hook
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -128,8 +130,12 @@ const Workouts = () => {
     navigate("/workouts/create");
   };
 
+  if (id) {
+    return <WorkoutDetails workoutId={id} />;
+  }
+
   return (
-    <div className="min-h-screen bg-midnight-green text-white p-6">
+    <div className="min-h-screen bg-dark-slate-gray text-white p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header with authenticated create button */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
@@ -149,43 +155,6 @@ const Workouts = () => {
             </button>
           </div>
         </div>
-
-        {/* Auth-dependent messaging */}
-        {!isAuthenticated && !authLoading && (
-          <div className="bg-gray-800 border border-gray-700 p-4 rounded-lg mb-6">
-            <p className="flex items-center">
-              <span className="mr-2">👋</span>
-              <span>
-                <Link to="/login" className="text-goldenrod hover:underline">
-                  Log in
-                </Link>{" "}
-                or{" "}
-                <Link to="/register" className="text-goldenrod hover:underline">
-                  register
-                </Link>{" "}
-                to create your own workouts and track your progress.
-              </span>
-            </p>
-          </div>
-        )}
-
-        {/* Simple "My Workouts" toggle */}
-        {isAuthenticated && (
-          <div className="bg-gray-800 rounded-lg p-4 mb-8">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="myWorkouts"
-                checked={showUserWorkoutsOnly}
-                onChange={() => setShowUserWorkoutsOnly((prev) => !prev)}
-                className="mr-2 accent-goldenrod"
-              />
-              <label htmlFor="myWorkouts" className="text-white cursor-pointer">
-                Show my workouts only
-              </label>
-            </div>
-          </div>
-        )}
 
         {/* Error Message */}
         {error && (

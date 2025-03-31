@@ -1,6 +1,6 @@
 import React from "react";
 
-const PasswordHide = () => {
+const FilterIcon = () => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -19,4 +19,4 @@ const PasswordHide = () => {
   );
 };
 
-export default PasswordHide;
+export default FilterIcon;

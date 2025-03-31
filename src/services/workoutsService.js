@@ -100,7 +100,8 @@ const workoutsService = {
    */
   async updateWorkout(id, workoutData) {
     try {
-      const response = await api.put(`/workout-plans/${id}`, workoutData);
+      // Try PATCH instead of PUT
+      const response = await api.patch(`/workout-plans/${id}`, workoutData);
       return response.data;
     } catch (error) {
       console.error(`Error updating workout ${id}:`, error);

@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import workoutExercisesService from "../../services/workoutExercisesService";
 
 /**
  * WorkoutCard component to display workout plan information
@@ -10,8 +11,35 @@ import { Link } from "react-router-dom";
  * @param {Boolean} isOwner - Optional flag to determine if the current user is the owner
  */
 const WorkoutCard = ({ workout, onEdit, onDelete, isOwner = false }) => {
-  // Get exercise count from workout_exercises if available
-  const exerciseCount = workout.workoutExercises?.length || 0;
+  const [exercises, setExercises] = useState([]);
+
+  useEffect(() => {
+    const fetchExercises = async () => {
+      try {
+        const exercisesData = await workoutExercisesService.getWorkoutExercises(
+          workout.id
+        );
+        setExercises(Array.isArray(exercisesData) ? exercisesData : []);
+      } catch (err) {
+        console.error(
+          `Error fetching exercises for workout ${workout.id}:`,
+          err
+        );
+        setExercises([]);
+      }
+    };
+
+    fetchExercises();
+  }, [workout.id]);
+
+  // Add this near the beginning of your component
+  console.log(`Workout ${workout.id} data:`, workout);
+  console.log(
+    `Exercise data for workout ${workout.id}:`,
+    workout.workoutExercises || workout.exercises || "No exercises data found"
+  );
+  const exerciseCount = exercises.length;
+  console.log(`Calculated exercise count: ${exerciseCount}`);
 
   // Format duration in minutes to a readable format
   const formattedDuration = formatDuration(workout.durationMinutes);
@@ -101,17 +129,6 @@ const WorkoutCard = ({ workout, onEdit, onDelete, isOwner = false }) => {
             >
               {workout.status}
             </span>
-
-            {/* Public/Private indicator */}
-            <span
-              className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${
-                workout.isPublic
-                  ? "bg-blue-100 text-blue-800"
-                  : "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {workout.isPublic ? "Public" : "Private"}
-            </span>
           </div>
         )}
 
@@ -154,6 +171,23 @@ const WorkoutCard = ({ workout, onEdit, onDelete, isOwner = false }) => {
       </div>
     </div>
   );
+};
+
+/**
+ * Update the exercise count calculation to handle multiple possible formats
+ */
+const getExerciseCount = (workout) => {
+  // Check all possible locations for workout exercises data
+  if (workout.workoutExercises && Array.isArray(workout.workoutExercises)) {
+    return workout.workoutExercises.length;
+  }
+
+  if (workout.exercises && Array.isArray(workout.exercises)) {
+    return workout.exercises.length;
+  }
+
+  // If no exercises property exists or it's not an array, return 0
+  return 0;
 };
 
 /**

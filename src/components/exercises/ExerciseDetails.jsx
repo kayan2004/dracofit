@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import exercisesService from "../../services/exercisesService";
+import VideoPlayer from "../common/VideoPlayer"; // Import the new component
 
 const ExerciseDetails = () => {
   const { id } = useParams();
@@ -44,18 +45,9 @@ const ExerciseDetails = () => {
     }
   };
 
-  // Function to capitalize first letter of each word
-  //   const capitalize = (str) => {
-  //     if (!str) return "";
-  //     return str
-  //       .split(" ")
-  //       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-  //       .join(" ");
-  //   };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-slate-grayflex items-center justify-center">
+      <div className="min-h-screen bg-dark-slate-gray flex items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-goldenrod"></div>
       </div>
     );
@@ -121,7 +113,7 @@ const ExerciseDetails = () => {
             {/* Difficulty badge */}
             {exercise.difficulty && (
               <span
-                className={`px-3 py-1 rounded-full text-sm  ${getDifficultyColor(
+                className={`px-3 py-1 rounded-full text-sm ${getDifficultyColor(
                   exercise.difficulty
                 )}`}
               >
@@ -150,24 +142,20 @@ const ExerciseDetails = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Left column - Video/Image and target muscles */}
           <div className="md:col-span-1">
-            {/* Exercise video if available */}
-            {exercise.videoUrl ? (
-              <div className="bg-gray-800 rounded-xl overflow-hidden mb-6">
-                <div className="aspect-w-16 aspect-h-9">
-                  <iframe
-                    src={exercise.videoUrl}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full"
-                  ></iframe>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-gray-800 rounded-xl flex items-center justify-center h-64 mb-6">
-                <span className="text-gray-600 text-5xl">🏋️</span>
-              </div>
-            )}
+            {/* Use the new VideoPlayer component */}
+            <VideoPlayer
+              url={exercise.videoUrl}
+              title={`${exercise.name} demonstration`}
+              className="mb-6"
+              fallbackImage={
+                exercise.imageUrl
+                  ? {
+                      src: exercise.imageUrl,
+                      alt: `${exercise.name} demonstration`,
+                    }
+                  : null
+              }
+            />
 
             {/* Target muscles */}
             <div className="bg-gray-800 rounded-xl p-5 mb-6">
@@ -210,11 +198,17 @@ const ExerciseDetails = () => {
             {/* Instructions (if you want to add this field to your backend) */}
             <div className="bg-gray-800 rounded-xl p-6 mb-6">
               <h3 className="text-2xl text-goldenrod mb-4">How To Perform</h3>
-              <p className="text-white leading-relaxed">
-                This section would display step-by-step instructions if
-                available in your exercise data. You may want to update your
-                backend entity to include an instructions field.
-              </p>
+              {exercise.instructions ? (
+                <ol className="text-white leading-relaxed list-decimal pl-5 space-y-2">
+                  {exercise.instructions.split("\n").map((step, index) => (
+                    <li key={index}>{step}</li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="text-gray-400 italic">
+                  Detailed instructions not available for this exercise.
+                </p>
+              )}
             </div>
 
             {/* Add to workout button */}

@@ -1,15 +1,43 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 
 /**
- * Exercise Card component to display basic exercise information
+ * Exercise Card component displaying exercise in a compact horizontal layout
+ * with Vimeo thumbnail as the static image
  * @param {Object} exercise - The exercise object containing details
  * @param {Function} onSelect - Optional callback when exercise is selected
  */
 const ExerciseCard = ({ exercise, onSelect }) => {
   // Default image if none is provided
   const defaultImage = "/images/exercise-placeholder.jpg";
+  const [thumbnailUrl, setThumbnailUrl] = useState(
+    exercise.imageUrl || defaultImage
+  );
+
+  // Extract Vimeo ID from URL or use direct ID
+  useEffect(() => {
+    if (exercise.videoUrl) {
+      // Extract Vimeo ID
+      let vimeoId = exercise.videoUrl;
+
+      // If it's a number, it's likely already the ID
+      if (/^\d+$/.test(exercise.videoUrl)) {
+        vimeoId = exercise.videoUrl;
+      } else {
+        // Try to extract ID from URL
+        const match = exercise.videoUrl.match(
+          /(?:vimeo\.com\/(?:manage\/videos\/|video\/|))(\d+)(?:$|\/|\?)/
+        );
+        if (match && match[1]) {
+          vimeoId = match[1];
+        }
+      }
+
+      // Set the thumbnail URL from Vimeo
+      setThumbnailUrl(`https://vumbnail.com/${vimeoId}.jpg`);
+    }
+  }, [exercise.videoUrl, exercise.imageUrl]);
 
   // Function to handle click events
   const handleClick = () => {
@@ -20,79 +48,47 @@ const ExerciseCard = ({ exercise, onSelect }) => {
 
   return (
     <div
-      className="bg-amber-100 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
+      className="bg-midnight-green rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex h-24"
       onClick={handleClick}
     >
-      {/* Exercise Image */}
-      <div className="relative h-40 overflow-hidden bg-gray-800">
-        {/* <img
-          src={exercise.imageUrl || defaultImage}
+      {/* Exercise Image - Left side */}
+      <div className="w-24 h-full bg-midnight-green-darker flex-shrink-0">
+        <img
+          src={thumbnailUrl}
           alt={exercise.name}
           className="w-full h-full object-cover"
           onError={(e) => {
+            e.target.onerror = null; // Prevent infinite loop
             e.target.src = defaultImage;
           }}
-        /> */}
-
-        {/* Difficulty Badge */}
-        <div className="absolute top-0 right-0 m-2">
-          <span
-            className={`px-2 py-1 text-xs font-semibold rounded ${
-              exercise.difficulty === "beginner"
-                ? "bg-green-800 text-green-200"
-                : exercise.difficulty === "intermediate"
-                ? "bg-yellow-800 text-yellow-200"
-                : "bg-red-800 text-red-200"
-            }`}
-          >
-            {exercise.difficulty?.charAt(0).toUpperCase() +
-              exercise.difficulty?.slice(1) || "Beginner"}
-          </span>
-        </div>
-
-        {/* Muscle Group Badge */}
-        {exercise.primaryMuscleGroup && (
-          <div className="absolute bottom-0 left-0 m-2">
-            <span className="px-2 py-1 text-xs font-semibold rounded bg-goldenrod/30 text-goldenrod">
-              {exercise.primaryMuscleGroup}
-            </span>
-          </div>
-        )}
+        />
       </div>
 
-      {/* Exercise Details */}
-      <div className="p-4">
-        <h3 className="text-lg font-bold text-goldenrod mb-2 truncate">
-          {exercise.name}
-        </h3>
+      {/* Exercise Details - Right side */}
+      <div className="p-3 flex flex-col justify-between flex-grow">
+        <div>
+          {/* Exercise Name */}
+          <h3 className="text-sm font-bold text-goldenrod truncate">
+            {exercise.name}
+          </h3>
 
-        <p className="text-gray-400 text-sm line-clamp-2 mb-3 h-10">
-          {exercise.description || "No description available."}
-        </p>
-
-        {/* Equipment & Category */}
-        <div className="flex flex-wrap gap-2 mt-2">
-          {exercise.equipment && (
-            <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">
-              {exercise.equipment}
-            </span>
-          )}
-
-          {exercise.category && (
-            <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">
-              {exercise.category}
-            </span>
+          {/* Target Muscle */}
+          {exercise.primaryMuscleGroup && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              Targets: {exercise.primaryMuscleGroup}
+            </p>
           )}
         </div>
 
-        {/* View Details Link */}
-        <div className="mt-4 flex justify-end">
+        {/* Badges Section */}
+        <div className="flex items-center justify-center mt-1">
+          {/* View Details Link */}
           <Link
             to={`/exercises/${exercise.id}`}
-            className="text-sm text-goldenrod hover:text-yellow-500 transition-colors"
+            className="text-xs text-goldenrod hover:text-yellow-500 transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
-            View Details →
+            Details →
           </Link>
         </div>
       </div>
@@ -108,7 +104,7 @@ ExerciseCard.propTypes = {
     difficulty: PropTypes.string,
     primaryMuscleGroup: PropTypes.string,
     equipment: PropTypes.string,
-    category: PropTypes.string,
+    videoUrl: PropTypes.string,
     imageUrl: PropTypes.string,
   }).isRequired,
   onSelect: PropTypes.func,
