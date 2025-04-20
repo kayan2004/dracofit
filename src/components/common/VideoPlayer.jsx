@@ -11,7 +11,7 @@ import PropTypes from "prop-types";
  * @param {Object} [props.fallbackImage] - Image to display if video can't be loaded
  */
 const VideoPlayer = ({
-  url,
+  url = null,
   title = "Exercise Video",
   className = "",
   fallbackImage = null,
@@ -36,32 +36,34 @@ const VideoPlayer = ({
   const vimeoId = getVimeoId(url);
 
   // If we couldn't parse the URL or there's no URL
-  if (!vimeoId) {
-    return (
-      <div
-        className={`bg-gray-800 rounded-xl flex items-center justify-center h-64 ${className}`}
-      >
-        {fallbackImage ? (
-          <img
-            src={fallbackImage.src}
-            alt={fallbackImage.alt || "Exercise illustration"}
-            className="max-h-full max-w-full object-contain"
-          />
-        ) : (
-          <div className="text-center p-4">
-            <span className="text-gray-600 text-5xl block mb-2">🏋️</span>
-            <p className="text-gray-400">No video available</p>
-          </div>
-        )}
-      </div>
-    );
-  }
+  // if (!vimeoId) {
+  //   return (
+  //     <div
+  //       className={`bg-gray-800 rounded-xl flex items-center justify-center h-64 ${className}`}
+  //     >
+  //       {fallbackImage ? (
+  //         <img
+  //           src={fallbackImage.src}
+  //           alt={fallbackImage.alt || "Exercise illustration"}
+  //           className="max-h-full max-w-full object-contain"
+  //         />
+  //       ) : (
+  //         <div className="text-center p-4">
+  //           <span className="text-gray-600 text-5xl block mb-2">🏋️</span>
+  //           <p className="text-gray-400">No video available</p>
+  //         </div>
+  //       )}
+  //     </div>
+  //   );
+  // }
 
   return (
-    <div className={`bg-gray-800 rounded-xl overflow-hidden ${className}`}>
+    <div
+      className={`bg-midnight-green rounded-xl overflow-hidden ${className}`}
+    >
       <div style={{ padding: "56.25% 0 0 0", position: "relative" }}>
         <iframe
-          src={`https://player.vimeo.com/video/${vimeoId}?badge=0&autopause=0&player_id=0&app_id=58479&title=0&byline=0&portrait=0&sidedock=0&transparent=0`}
+          src={`https://player.vimeo.com/video/${vimeoId}`}
           frameBorder="0"
           allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
           style={{

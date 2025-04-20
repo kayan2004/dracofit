@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext.jsx";
 import "./App.css";
 import "./index.css";
 import Login from "./pages/Login";
@@ -10,13 +10,17 @@ import Home from "./pages/Home";
 import ForgotPassword from "./pages/ForgetPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Exercises from "./pages/Exercises";
+import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import Exercise from "./pages/Exercise";
-import Workouts from "./pages/workouts";
+import Workouts from "./pages/Workouts.jsx";
+import EditSchedule from "./pages/EditSchedule";
 import WorkoutForm from "./components/workouts/WorkoutForm";
 import NavigationBar from "./components/common/NavigationBar";
-// Import other pages as needed
-
+import Chatbot from "./pages/Chatbot";
+import ProfileSetup from "./pages/ProfileSetup";
+import WorkoutSession from "./pages/WorkoutSession";
+import WorkoutSummary from "./pages/WorkoutSummary";
 function App() {
   return (
     <BrowserRouter>
@@ -33,19 +37,31 @@ function App() {
               path="/waiting-verification"
               element={<WaitingForVerification />}
             />
+
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
+              <Route path="/profile-setup" element={<ProfileSetup />} />
               <Route path="/exercises" element={<Exercises />} />
-              {/* Add other protected routes here */}
-            </Route>
-            <Route element={<ProtectedRoute />}>
               <Route path="/exercises/:id" element={<Exercise />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/chatbot" element={<Chatbot />} />
+              <Route
+                path="/workout-session/:workoutId"
+                element={<WorkoutSession />}
+              />
+              <Route
+                path="/workout-summary/:workoutLogId"
+                element={<WorkoutSummary />}
+              />
             </Route>
-            // Update your routes to include workout details
+
+            {/* Workout routes */}
             <Route path="/workouts" element={<Workouts />} />
             <Route path="/workouts/:id" element={<Workouts />} />
             <Route path="/workouts/create" element={<WorkoutForm />} />
             <Route path="/workouts/edit/:id" element={<WorkoutForm />} />
+            <Route path="/schedule" element={<EditSchedule />} />
+
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />
           </Routes>

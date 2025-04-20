@@ -2,3 +2,39 @@
   margin: 0 auto;
   text-align: center;
 }
+/* Add to your global CSS file */
+.markdown-content {
+  font-size: inherit;
+  line-height: 1.6;
+}
+
+.markdown-content p {
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin-left: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.25rem;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  font-weight: 600;
+  font-size: inherit;
+  text-transform: none;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+}

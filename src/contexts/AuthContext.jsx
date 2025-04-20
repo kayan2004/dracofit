@@ -40,7 +40,15 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.login(credentials);
       setCurrentUser(response.user);
       setIsAuthenticated(true);
-      return response;
+
+      // Check if user has completed profile setup
+      const hasProfile = await authService.hasCompletedProfileSetup();
+
+      // Return additional info about profile status
+      return {
+        ...response,
+        hasCompletedProfile: hasProfile,
+      };
     } catch (err) {
       setError(err.message || "Login failed");
       throw err;

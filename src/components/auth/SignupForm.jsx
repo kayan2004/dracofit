@@ -176,7 +176,13 @@ const SignupForm = ({ onSignup }) => {
         required
       />
 
-      <FormButton type="submit" isLoading={isLoading} fullWidth>
+      <FormButton
+        type="submit"
+        styles="p-4 border-b-6 border-r-6"
+        fontsize="text-heading-4"
+        isLoading={isLoading}
+        fullWidth
+      >
         Sign Up
       </FormButton>
     </form>

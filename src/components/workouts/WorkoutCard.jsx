@@ -74,8 +74,8 @@ const WorkoutCard = ({ workout, onEdit, onDelete, isOwner = false }) => {
   const typeColor = getTypeStyle(workout.type);
 
   return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-      {/* Card Header */}
+    <div className="bg-midnight-green rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+      {/* Card Header
       <div className="h-32 bg-gradient-to-r from-dark-slate-gray to-midnight-green flex items-center justify-center p-4">
         <div className="bg-goldenrod/10 w-full h-full rounded-lg flex items-center justify-center">
           {workout.type ? (
@@ -86,7 +86,7 @@ const WorkoutCard = ({ workout, onEdit, onDelete, isOwner = false }) => {
             <span className="text-goldenrod text-5xl">💪</span>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* Card Body */}
       <div className="p-5">

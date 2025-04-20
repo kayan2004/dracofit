@@ -4,6 +4,9 @@ import workoutsService from "../services/workoutsService";
 import WorkoutCard from "../components/workouts/WorkoutCard";
 import { useAuth } from "../hooks/useAuth";
 import WorkoutDetails from "../components/workouts/WorkoutDetails";
+import FormButton from "../components/common/FormButton";
+// Import the WeeklyScheduleOverview component
+import WeeklyScheduleOverview from "../components/schedule/WeeklyScheduleOverview";
 
 const Workouts = () => {
   const { id } = useParams();
@@ -137,24 +140,10 @@ const Workouts = () => {
   return (
     <div className="min-h-screen bg-dark-slate-gray text-white p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Header with authenticated create button */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <div>
-            <h1 className="text-heading-1 text-goldenrod mb-2">Workouts</h1>
-            <p className="text-gray">
-              Browse workout plans or create your own fitness routine
-            </p>
-          </div>
+        <h1 className="text-heading-1 text-goldenrod mb-6">Workouts</h1>
 
-          <div className="mt-4 md:mt-0">
-            <button
-              onClick={handleCreateWorkout}
-              className="bg-goldenrod text-midnight-green px-5 py-2.5 rounded-lg font-bold hover:bg-dark-goldenrod transition-colors"
-            >
-              Create Workout
-            </button>
-          </div>
-        </div>
+        {/* Add the WeeklyScheduleOverview component */}
+        <WeeklyScheduleOverview />
 
         {/* Error Message */}
         {error && (
@@ -202,31 +191,15 @@ const Workouts = () => {
           </div>
         )}
 
-        {/* No results state with auth-context */}
-        {!loading &&
-          !authLoading &&
-          !error &&
-          filteredWorkouts.length === 0 && (
-            <div className="bg-gray-800 rounded-lg p-8 text-center">
-              <div className="text-5xl mb-4">🏋️</div>
-              <h3 className="text-heading-3 text-goldenrod mb-2">
-                No Workouts Found
-              </h3>
-              <p className="text-gray mb-6">
-                {showUserWorkoutsOnly
-                  ? "You haven't created any workouts yet."
-                  : "There are currently no workouts available."}
-              </p>
-              <button
-                onClick={handleCreateWorkout}
-                className="bg-goldenrod text-midnight-green px-5 py-2.5 rounded-lg font-bold hover:bg-dark-goldenrod transition-colors inline-block"
-              >
-                {isAuthenticated
-                  ? "Create Your First Workout"
-                  : "Log In to Create Workouts"}
-              </button>
-            </div>
-          )}
+        <div className="mt-4 md:mt-0">
+          <FormButton
+            styles="p-4 border-b-8 border-r-8 w-full "
+            fontsize="text-heading-4"
+            onClick={handleCreateWorkout}
+          >
+            Create New Workout
+          </FormButton>
+        </div>
       </div>
     </div>
   );

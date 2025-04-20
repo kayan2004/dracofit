@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import ExerciseCard from "./ExerciseCard";
-import ExerciseFilter from "./ExerciseFilter";
+import ExerciseFilters from "./ExerciseFilters"; // Update the import
 import exercisesService from "../../services/exercisesService";
 
 /**
@@ -21,7 +21,16 @@ const ExercisesModal = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [muscleFilter, setMuscleFilter] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Updated to use the enhanced filters structure
+  const [filters, setFilters] = useState({
+    difficulty: "",
+    targetMuscles: [],
+    equipment: "",
+    type: "",
+  });
+
   const [selectedExerciseId, setSelectedExerciseId] = useState("");
   const [exerciseParams, setExerciseParams] = useState({
     sets: initialParams.sets || 3,
@@ -78,13 +87,21 @@ const ExercisesModal = ({
     fetchExercises();
   }, [isOpen]);
 
-  // Apply filters when search term or muscle filter changes
+  // Apply filters when search term or filters change
   useEffect(() => {
     if (!exercises.length) return;
 
     const applyFilters = async () => {
+      // Check if we have any active filters
+      const hasActiveFilters =
+        searchTerm ||
+        filters.difficulty ||
+        filters.equipment ||
+        filters.type ||
+        filters.targetMuscles.length > 0;
+
       // If no filters are applied, show all exercises
-      if (!searchTerm && !muscleFilter) {
+      if (!hasActiveFilters) {
         setFilteredExercises(exercises);
         return;
       }
@@ -93,65 +110,37 @@ const ExercisesModal = ({
         setLoading(true);
 
         // Create filter object for API call
-        const filters = {};
+        const apiFilters = { ...filters };
 
+        // Add search if provided
         if (searchTerm) {
-          // Use search endpoint if we have a search term
-          const searchResponse = await exercisesService.searchExercises(
-            searchTerm,
-            1,
-            1000
-          );
-
-          let searchResults = [];
-          if (
-            searchResponse.exercises &&
-            Array.isArray(searchResponse.exercises)
-          ) {
-            searchResults = searchResponse.exercises;
-          } else if (Array.isArray(searchResponse)) {
-            searchResults = searchResponse;
-          }
-
-          // If we also have a muscle filter, apply it client-side
-          if (muscleFilter) {
-            searchResults = searchResults.filter(
-              (exercise) =>
-                exercise.targetMuscles &&
-                exercise.targetMuscles.some((muscle) =>
-                  muscle.toLowerCase().includes(muscleFilter.toLowerCase())
-                )
-            );
-          }
-
-          setFilteredExercises(searchResults);
-        } else if (muscleFilter) {
-          // Only muscle filter is applied
-          filters.targetMuscles = [muscleFilter];
-
-          const filterResponse = await exercisesService.getFilteredExercises(
-            filters,
-            1,
-            1000
-          );
-
-          let filterResults = [];
-          if (
-            filterResponse.exercises &&
-            Array.isArray(filterResponse.exercises)
-          ) {
-            filterResults = filterResponse.exercises;
-          } else if (Array.isArray(filterResponse)) {
-            filterResults = filterResponse;
-          }
-
-          setFilteredExercises(filterResults);
+          apiFilters.search = searchTerm;
         }
+
+        // Call API with all filters
+        const filterResponse = await exercisesService.getFilteredExercises(
+          apiFilters,
+          1,
+          1000
+        );
+
+        let filterResults = [];
+        if (
+          filterResponse.exercises &&
+          Array.isArray(filterResponse.exercises)
+        ) {
+          filterResults = filterResponse.exercises;
+        } else if (Array.isArray(filterResponse)) {
+          filterResults = filterResponse;
+        }
+
+        setFilteredExercises(filterResults);
       } catch (err) {
         console.error("Error applying filters:", err);
 
         // Fall back to client-side filtering if the server request fails
         const filtered = exercises.filter((exercise) => {
+          // Text search matching
           const matchesSearch =
             !searchTerm.trim() ||
             exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,14 +153,41 @@ const ExercisesModal = ({
                 muscle.toLowerCase().includes(searchTerm.toLowerCase())
               ));
 
-          const matchesMuscle =
-            !muscleFilter ||
+          // Difficulty matching
+          const matchesDifficulty =
+            !filters.difficulty ||
+            (exercise.difficulty &&
+              exercise.difficulty.toLowerCase() ===
+                filters.difficulty.toLowerCase());
+
+          // Equipment matching
+          const matchesEquipment =
+            !filters.equipment ||
+            (exercise.equipment &&
+              exercise.equipment.toLowerCase() ===
+                filters.equipment.toLowerCase());
+
+          // Type matching
+          const matchesType =
+            !filters.type ||
+            (exercise.type &&
+              exercise.type.toLowerCase() === filters.type.toLowerCase());
+
+          // Target muscles matching (any of the selected muscles)
+          const matchesMuscles =
+            filters.targetMuscles.length === 0 ||
             (exercise.targetMuscles &&
               exercise.targetMuscles.some((muscle) =>
-                muscle.toLowerCase().includes(muscleFilter.toLowerCase())
+                filters.targetMuscles.includes(muscle.toLowerCase())
               ));
 
-          return matchesSearch && matchesMuscle;
+          return (
+            matchesSearch &&
+            matchesDifficulty &&
+            matchesEquipment &&
+            matchesType &&
+            matchesMuscles
+          );
         });
 
         setFilteredExercises(filtered);
@@ -186,7 +202,7 @@ const ExercisesModal = ({
     }, 300);
 
     return () => clearTimeout(timerId);
-  }, [searchTerm, muscleFilter, exercises]);
+  }, [searchTerm, filters, exercises]);
 
   // Handle parameter changes (sets, reps, rest)
   const handleParamChange = (e) => {
@@ -199,6 +215,35 @@ const ExercisesModal = ({
       ...prev,
       [name]: numValue,
     }));
+  };
+
+  // Handle filter changes
+  const handleFilterChange = (filterType, value) => {
+    setFilters((prev) => {
+      // Special handling for muscle groups (array)
+      if (filterType === "targetMuscles") {
+        // If value is already in array, remove it; otherwise add it
+        const updatedMuscles = prev.targetMuscles.includes(value)
+          ? prev.targetMuscles.filter((muscle) => muscle !== value)
+          : [...prev.targetMuscles, value];
+
+        return { ...prev, targetMuscles: updatedMuscles };
+      }
+
+      // For other filters (single value)
+      return { ...prev, [filterType]: value };
+    });
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setFilters({
+      difficulty: "",
+      targetMuscles: [],
+      equipment: "",
+      type: "",
+    });
+    setSearchTerm("");
   };
 
   // Handle outside click to close modal
@@ -234,7 +279,7 @@ const ExercisesModal = ({
     >
       <div
         ref={modalRef}
-        className="bg-midnight-green border border-gray-700 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-fadeIn"
+        className="bg-dark-slate-gray border border-gray-700 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-fadeIn"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -275,15 +320,25 @@ const ExercisesModal = ({
             </div>
           )}
 
-          {/* Exercise Filter */}
-          <ExerciseFilter
-            searchTerm={searchTerm}
-            onSearchChange={(e) => setSearchTerm(e.target.value)}
-            selectedMuscle={muscleFilter}
-            onMuscleChange={(muscle) =>
-              setMuscleFilter(muscle === "All" ? "" : muscle.toLowerCase())
-            }
-            searchInputRef={searchInputRef}
+          {/* Search Input (Separate from filters for better UX) */}
+          <div className="mb-4">
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search exercises..."
+              className="w-full bg-midnight-green border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-goldenrod"
+            />
+          </div>
+
+          {/* Replace the old ExerciseFilter with ExerciseFilters */}
+          <ExerciseFilters
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onClearFilters={clearFilters}
+            showFilters={showFilters}
+            onToggleFilters={() => setShowFilters(!showFilters)}
           />
 
           {/* Exercise List */}
@@ -327,8 +382,11 @@ const ExercisesModal = ({
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-400">
-                    {searchTerm || muscleFilter
-                      ? "No exercises match your search"
+                    {searchTerm ||
+                    Object.values(filters).some((v) =>
+                      Array.isArray(v) ? v.length > 0 : Boolean(v)
+                    )
+                      ? "No exercises match your search criteria"
                       : "No exercises available"}
                   </div>
                 )}

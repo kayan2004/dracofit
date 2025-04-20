@@ -106,6 +106,35 @@ const workoutExercisesService = {
   },
 
   /**
+   * Add multiple exercises to a workout at once
+   * @param {number} workoutId - Workout ID
+   * @param {Array} exercisesData - Array of exercise data objects
+   * @returns {Promise} Promise with the result
+   */
+  async addExercisesToWorkout(workoutId, exercisesData) {
+    try {
+      // Create an array of promises for parallel processing
+      const addPromises = exercisesData.map((exerciseData) =>
+        this.addExerciseToWorkout(workoutId, exerciseData)
+      );
+
+      // Execute all promises and wait for all to complete
+      const results = await Promise.all(addPromises);
+      return results;
+    } catch (error) {
+      console.error(
+        `Error adding multiple exercises to workout ${workoutId}:`,
+        error
+      );
+      throw (
+        error.response?.data || {
+          message: "Failed to add exercises to workout",
+        }
+      );
+    }
+  },
+
+  /**
    * Update an exercise in a workout
    * @param {number} workoutId - Workout ID
    * @param {number} exerciseId - Exercise ID

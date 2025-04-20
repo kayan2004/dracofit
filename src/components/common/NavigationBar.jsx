@@ -131,7 +131,7 @@ const NavigationBar = ({ className = "" }) => {
       path: "/chatbot",
       icon: ChatbotIcon,
       active: location.pathname.includes("/chatbot"),
-      enabled: false, // Not yet functional
+      enabled: true, // Change from false to true
     },
   ];
 

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ExerciseCard from "../components/exercises/ExerciseCard";
+import ExerciseFilters from "../components/exercises/ExerciseFilters"; // Import the new component
 import exercisesService from "../services/exercisesService";
 import SearchIcon from "../components/icons/SearchIcon";
-import SearchBar from "../components/common/SearchBar"; // Import the new component
-import FilterIcon from "../components/icons/FilterIcon";
+import SearchBar from "../components/common/SearchBar";
 import ArrowRight from "../components/icons/ArrowRight";
 import ArrowLeft from "../components/icons/ArrowLeft";
 
@@ -25,41 +25,6 @@ const Exercises = () => {
     equipment: "",
     type: "",
   });
-
-  // Filter options lists
-  const difficultyOptions = ["beginner", "intermediate", "advanced"];
-  const muscleGroupOptions = [
-    "chest",
-    "back",
-    "shoulders",
-    "biceps",
-    "triceps",
-    "quadriceps",
-    "hamstrings",
-    "calves",
-    "glutes",
-    "abs",
-    "forearms",
-  ];
-  const equipmentOptions = [
-    "barbell",
-    "dumbbell",
-    "machine",
-    "cable",
-    "kettlebell",
-    "resistance band",
-    "body only",
-    "medicine ball",
-    "exercise ball",
-  ];
-  const typeOptions = [
-    "strength",
-    "cardio",
-    "stretching",
-    "plyometrics",
-    "powerlifting",
-    "olympic weightlifting",
-  ];
 
   // Show filter panel state
   const [showFilters, setShowFilters] = useState(false);
@@ -285,118 +250,14 @@ const Exercises = () => {
           />
         </div>
 
-        {/* Filter Toggle Button */}
-        <div className="flex justify-between items-center mb-4">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center text-goldenrod hover:text-dark-goldenrod transition-colors"
-          >
-            <FilterIcon />
-            {showFilters ? "Hide Filters" : "Show Filters"}
-            {activeFilterCount > 0 && (
-              <span className="ml-2 bg-goldenrod text-black rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-
-          {activeFilterCount > 0 && (
-            <button
-              onClick={clearFilters}
-              className="text-sm text-gray-400 hover:text-dark-gray transition-colors"
-            >
-              Clear All Filters
-            </button>
-          )}
-        </div>
-
-        {/* Filter Panel */}
-        {showFilters && (
-          <div className="bg-gray-800 rounded-lg p-4 mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Difficulty Filter */}
-            <div>
-              <h3 className="font-medium mb-2 text-goldenrod">Difficulty</h3>
-              <div className="flex flex-wrap gap-2">
-                {difficultyOptions.map((option) => (
-                  <button
-                    key={option}
-                    onClick={() =>
-                      handleFilterChange(
-                        "difficulty",
-                        filters.difficulty === option ? "" : option
-                      )
-                    }
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      filters.difficulty === option
-                        ? "bg-goldenrod text-gray-900"
-                        : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                    }`}
-                  >
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Equipment Filter */}
-            <div>
-              <h3 className="font-medium mb-2 text-goldenrod">Equipment</h3>
-              <select
-                value={filters.equipment}
-                onChange={(e) =>
-                  handleFilterChange("equipment", e.target.value)
-                }
-                className="w-full bg-gray-700 text-white border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-goldenrod"
-              >
-                <option value="">Any Equipment</option>
-                {equipmentOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Exercise Type Filter */}
-            <div>
-              <h3 className="font-medium mb-2 text-goldenrod">Type</h3>
-              <select
-                value={filters.type}
-                onChange={(e) => handleFilterChange("type", e.target.value)}
-                className="w-full bg-gray-700 text-white border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-goldenrod"
-              >
-                <option value="">Any Type</option>
-                {typeOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Muscle Group Filter - Multi-select */}
-            <div>
-              <h3 className="font-medium mb-2 text-goldenrod">
-                Target Muscles
-              </h3>
-              <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto">
-                {muscleGroupOptions.map((muscle) => (
-                  <button
-                    key={muscle}
-                    onClick={() => handleFilterChange("targetMuscles", muscle)}
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      filters.targetMuscles.includes(muscle)
-                        ? "bg-goldenrod text-gray-900"
-                        : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                    }`}
-                  >
-                    {muscle.charAt(0).toUpperCase() + muscle.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Replace filters with the ExerciseFilters component */}
+        <ExerciseFilters
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onClearFilters={clearFilters}
+          showFilters={showFilters}
+          onToggleFilters={() => setShowFilters(!showFilters)}
+        />
       </div>
 
       {/* Loading state */}
@@ -457,39 +318,39 @@ const Exercises = () => {
         )
       )}
 
-      {/* Pagination - Updated to work with search too */}
+      {/* Pagination - Updated to show only 3 pages */}
       {!loading && !error && totalPages > 1 && (
         <div className="flex justify-center mt-8 space-x-2">
           {/* Previous page button */}
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`px-3 py-2 rounded-md ${
+            className={`px-3 py-2 bg-dark-aquamarine text-midnight-green rounded-md ${
               currentPage === 1
-                ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                : "bg-gray-700 text-white hover:bg-gray-600"
+                ? " opacity-70 cursor-not-allowed "
+                : " hover:opacity-70"
             }`}
             aria-label="Previous page"
           >
             <ArrowRight />
           </button>
 
-          {/* Page number buttons - show max 5 pages */}
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+          {/* Page number buttons - show max 3 pages */}
+          {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
             // Your existing page calculation logic
             let pageNum;
-            if (totalPages <= 5) {
-              // If 5 or fewer pages, show all pages
+            if (totalPages <= 3) {
+              // If 3 or fewer pages, show all pages
               pageNum = i + 1;
-            } else if (currentPage <= 3) {
-              // If near the start, show pages 1-5
+            } else if (currentPage <= 2) {
+              // If near the start, show pages 1-3
               pageNum = i + 1;
-            } else if (currentPage >= totalPages - 2) {
-              // If near the end, show the last 5 pages
-              pageNum = totalPages - 4 + i;
+            } else if (currentPage >= totalPages - 1) {
+              // If near the end, show the last 3 pages
+              pageNum = totalPages - 2 + i;
             } else {
-              // Otherwise show 2 before and 2 after current page
-              pageNum = currentPage - 2 + i;
+              // Otherwise show 1 before and 1 after current page
+              pageNum = currentPage - 1 + i;
             }
 
             return (
@@ -498,8 +359,8 @@ const Exercises = () => {
                 onClick={() => handlePageChange(pageNum)}
                 className={`px-3 py-1 min-w-[2rem] rounded-md ${
                   currentPage === pageNum
-                    ? "bg-goldenrod text-gray-900 font-medium"
-                    : "bg-gray-700 text-white hover:bg-gray-600"
+                    ? "bg-goldenrod text-midnight-green font-medium"
+                    : "bg-dark-aquamarine text-midnight-green hover:bg-gray-600"
                 }`}
               >
                 {pageNum}
@@ -511,12 +372,12 @@ const Exercises = () => {
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`px-3 py-2 rounded-md ${
+            className={`px-3 py-2 bg-dark-aquamarine text-midnight-green rounded-md ${
               currentPage === totalPages
-                ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                : "bg-gray-700 text-white hover:bg-gray-600"
+                ? " opacity-70 cursor-not-allowed "
+                : " hover:opacity-70"
             }`}
-            aria-label="Next page"
+            aria-label="Previous page"
           >
             <ArrowLeft />
           </button>

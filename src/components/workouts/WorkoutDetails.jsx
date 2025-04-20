@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import workoutsService from "../../services/workoutsService";
 import workoutExercisesService from "../../services/workoutExercisesService";
+import FormButton from "../common/FormButton";
+import SecondaryButton from "../common/SecondaryButton";
 
 /**
  * Component to display full details of a workout plan
@@ -157,7 +159,7 @@ const WorkoutDetails = ({ workoutId }) => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-midnight-green p-6 flex flex-col items-center justify-center text-white">
+      <div className="min-h-screen bg-dark-slate-gray p-6 flex flex-col items-center justify-center text-white">
         <div className="bg-sepia/20 border border-goldenrod text-goldenrod p-6 rounded-lg max-w-lg w-full text-center">
           <div className="text-3xl mb-3">⚠️</div>
           <h2 className="text-xl font-bold mb-2">Error Loading Workout</h2>
@@ -176,7 +178,7 @@ const WorkoutDetails = ({ workoutId }) => {
 
   if (!workout) {
     return (
-      <div className="min-h-screen bg-midnight-green p-6 flex flex-col items-center justify-center text-white">
+      <div className="min-h-screen bg-dark-slate-gray p-6 flex flex-col items-center justify-center text-white">
         <div className="bg-sepia/20 border border-goldenrod text-goldenrod p-6 rounded-lg max-w-lg w-full text-center">
           <div className="text-3xl mb-3">⚠️</div>
           <h2 className="text-xl font-bold mb-2">Workout Not Found</h2>
@@ -196,7 +198,7 @@ const WorkoutDetails = ({ workoutId }) => {
   }
 
   return (
-    <div className="min-h-screen bg-midnight-green text-white p-6 pb-24">
+    <div className="min-h-screen bg-dark-slate-gray text-white p-6 ">
       {/* Back button */}
       <button
         onClick={handleGoBack}
@@ -226,21 +228,21 @@ const WorkoutDetails = ({ workoutId }) => {
 
           {/* Workout metadata */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-            <div className="bg-gray-800 rounded-lg p-4 flex flex-col items-center justify-center">
+            <div className="bg-midnight-green rounded-lg p-4 flex flex-col items-center justify-center">
               <span className="text-4xl mb-2">
                 {getWorkoutTypeEmoji(workout.type)}
               </span>
               <h3 className="text-lg text-goldenrod font-medium">Type</h3>
               <p className="text-gray">{workout.type || "General"}</p>
             </div>
-            <div className="bg-gray-800 rounded-lg p-4 flex flex-col items-center justify-center">
+            <div className="bg-midnight-green rounded-lg p-4 flex flex-col items-center justify-center">
               <span className="text-4xl mb-2">⏱️</span>
               <h3 className="text-lg text-goldenrod font-medium">Duration</h3>
               <p className="text-gray">
                 {formatDuration(workout.durationMinutes)}
               </p>
             </div>
-            <div className="bg-gray-800 rounded-lg p-4 flex flex-col items-center justify-center">
+            <div className="bg-midnight-green rounded-lg p-4 flex flex-col items-center justify-center">
               <span className="text-4xl mb-2">🏋️</span>
               <h3 className="text-lg text-goldenrod font-medium">Exercises</h3>
               <p className="text-gray">
@@ -369,38 +371,33 @@ const WorkoutDetails = ({ workoutId }) => {
         <div className="mt-8 flex flex-wrap gap-4 justify-center">
           {/* Only show edit button if the user is the owner of the workout */}
           {isAuthenticated && workout.userId === user?.id && (
-            <button
+            <SecondaryButton
               onClick={() => navigate(`/workouts/edit/${workout.id}`)}
-              className="px-6 py-3 bg-goldenrod text-midnight-green rounded-lg font-bold hover:bg-dark-goldenrod transition-colors"
+              styles="p-4 border-b-6 border-r-6 "
             >
               Edit Workout
-            </button>
+            </SecondaryButton>
           )}
 
           {/* Start workout button - for all users */}
-          <button
+          <FormButton
             onClick={() => {
-              // Navigate to workout log or start screen
-              console.log("Start workout:", workout.id);
-              // navigate(`/workout-log/start/${workout.id}`);
+              if (!isAuthenticated) {
+                navigate("/login", {
+                  state: {
+                    from: `/workout-session/${workout.id}`,
+                    message: "Please log in to start a workout",
+                  },
+                });
+                return;
+              }
+              navigate(`/workout-session/${workout.id}`);
             }}
-            className="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            styles="p-4 border-b-6 border-r-6 text-body"
+            fontsize="text-body"
           >
             Start Workout
-          </button>
-
-          {/* Copy workout button
-          {isAuthenticated && (
-            <button
-              onClick={() => {
-                console.log("Copy workout:", workout.id);
-                // Implement copy functionality
-              }}
-              className="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              Copy to My Workouts
-            </button>
-          )} */}
+          </FormButton>
         </div>
       </div>
     </div>

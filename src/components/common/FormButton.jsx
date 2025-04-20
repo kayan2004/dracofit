@@ -6,6 +6,8 @@ const FormButton = ({
   type = "button",
   isLoading = false,
   fullWidth = false,
+  styles = "",
+  fontsize = "text-heading-4",
   onClick,
   ...props
 }) => {
@@ -14,12 +16,14 @@ const FormButton = ({
       type={type}
       onClick={onClick}
       disabled={isLoading}
-      className={`bg-goldenrod p-4 mt-5 rounded-md border-b-8 border-r-8 hover:brightness-75 border-dark-goldenrod
+      className={`bg-goldenrod   rounded-md hover:brightness-75 border-dark-goldenrod ${styles}
         ${isLoading ? "opacity-70 cursor-not-allowed" : ""} 
         ${fullWidth ? "w-full" : ""}`}
       {...props}
     >
-      <div className="flex items-center justify-center gap-4 text-heading-4 text-midnight-green">
+      <div
+        className={`flex items-center justify-center gap-4 ${fontsize} text-midnight-green`}
+      >
         {children}
         {isLoading ? <SpinningIcon styles="text-midnight-green" /> : null}
       </div>

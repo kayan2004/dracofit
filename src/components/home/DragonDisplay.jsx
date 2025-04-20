@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import PropTypes from "prop-types";
 import { motion } from "framer-motion";
 
 const DragonDisplay = ({
   level,
-  stage = "adult",
+  stage = "baby",
   animation = "idle",
   name = "dragon",
 }) => {
@@ -22,32 +22,85 @@ const DragonDisplay = ({
   const animationTimerRef = useRef(null);
   const frameCountRef = useRef(0);
 
-  // Animation configurations with custom sequences
-  const animations = {
-    idle: {
-      totalFrames: 3,
-      frameDurations: [5000, 300, 2000, 300],
-      sequence: [1, 2, 3, 2], // Default sequence
+  // Stage-specific animation configurations
+  const animationConfigs = {
+    baby: {
+      idle: {
+        totalFrames: 4,
+        frameDurations: [5000, 300, 2000, 300],
+        sequence: [1, 2, 3, 4, 3, 4, 3, 4, 3, 4, 3, 2],
+      },
+      happy: {
+        totalFrames: 6,
+        frameDurations: [200, 300, 400, 500, 300, 400],
+        sequence: [1, 2, 3, 2, 3, 4, 5, 6, 5, 6],
+      },
+      sad: {
+        totalFrames: 4,
+        frameDurations: [500, 700, 600, 1000],
+        sequence: [1, 2, 3, 4, 3, 2],
+      },
+      dead: {
+        totalFrames: 1,
+        frameDurations: [1000],
+        sequence: [1],
+      },
     },
-    happy: {
-      totalFrames: 6,
-      frameDurations: [200, 300, 400, 500, 300, 400],
-      sequence: [1, 2, 3, 2, 3, 4, 5, 6, 5, 6], // Your requested custom sequence
+    teen: {
+      idle: {
+        totalFrames: 4,
+        frameDurations: [5000, 400, 1500, 400],
+        sequence: [1, 2, 3, 4, 3, 2, 3, 2],
+      },
+      happy: {
+        totalFrames: 5,
+        frameDurations: [200, 300, 400, 400, 300],
+        sequence: [1, 2, 3, 4, 5, 4, 3, 4, 5, 4, 3, 2],
+      },
+      sad: {
+        totalFrames: 4,
+        frameDurations: [500, 600, 800, 900],
+        sequence: [1, 2, 3, 4, 3, 2, 1],
+      },
+      dead: {
+        totalFrames: 1,
+        frameDurations: [1000],
+        sequence: [1],
+      },
     },
-    sad: {
-      totalFrames: 4,
-      frameDurations: [500, 700, 600, 1000],
-      sequence: [1, 2, 3, 4, 3, 2], // Another example with ping-pong
+    adult: {
+      idle: {
+        totalFrames: 3,
+        frameDurations: [5000, 500, 2000],
+        sequence: [1, 2, 3, 2],
+      },
+      happy: {
+        totalFrames: 5, // Assuming different frame count
+        frameDurations: [200, 300, 400, 300, 200],
+        sequence: [1, 2, 3, 4, 5, 4, 3, 2],
+      },
+      sad: {
+        totalFrames: 3, // Assuming different frame count
+        frameDurations: [500, 700, 1000],
+        sequence: [1, 2, 3, 2, 1],
+      },
+      dead: {
+        totalFrames: 1,
+        frameDurations: [1000],
+        sequence: [1],
+      },
     },
-    dead: {
-      totalFrames: 1,
-      frameDurations: [1000],
-      sequence: [1], // Single frame
-    },
+    // Add other stages as needed (child, teen, etc.)
   };
 
-  // Get current animation config
-  const currentAnimation = animations[animation] || animations.idle;
+  // Memoize the current animation config to prevent unnecessary recalculations
+  const currentAnimation = useMemo(() => {
+    // Get stage config or default to baby
+    const stageConfig = animationConfigs[stage] || animationConfigs.baby;
+
+    // Get animation config or default to idle
+    return stageConfig[animation] || stageConfig.idle;
+  }, [stage, animation, animationConfigs]);
 
   // Load all images when animation type changes
   useEffect(() => {
@@ -59,6 +112,10 @@ const DragonDisplay = ({
 
       const frameUrls = [];
       const loadPromises = [];
+
+      console.log(
+        `Loading ${currentAnimation.totalFrames} frames for ${stage}/${animation}`
+      );
 
       // Create promises to preload all frames
       for (let i = 1; i <= currentAnimation.totalFrames; i++) {
@@ -126,9 +183,9 @@ const DragonDisplay = ({
         clearTimeout(animationTimerRef.current);
       }
     };
-  }, [animation, stage]);
+  }, [animation, stage]); // Removed currentAnimation from dependency array
 
-  // Function to start the animation cycle with proper timing
+  // Rest of your component remains the same...
   const startAnimation = (frameUrls) => {
     if (currentAnimation.totalFrames <= 1) return;
 
@@ -146,8 +203,19 @@ const DragonDisplay = ({
       // Convert to 0-based for array access
       const frameIndex = currentSequenceFrame - 1;
 
+      if (frameIndex >= frameUrls.length) {
+        console.error(
+          `Frame index ${frameIndex} out of bounds (max: ${
+            frameUrls.length - 1
+          })`
+        );
+        sequenceIndex = (sequenceIndex + 1) % sequence.length;
+        animationTimerRef.current = setTimeout(animateNextFrame, 500);
+        return;
+      }
+
       console.log(
-        `Showing frame ${currentSequenceFrame} for ${currentAnimation.frameDurations[frameIndex]}ms`
+        `[${stage}/${animation}] Showing frame ${currentSequenceFrame}/${currentAnimation.totalFrames} for ${currentAnimation.frameDurations[frameIndex]}ms`
       );
 
       // Update the inactive image with current frame's source

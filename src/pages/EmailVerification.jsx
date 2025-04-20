@@ -64,7 +64,8 @@ const EmailVerification = () => {
   }, [token, verifyEmail]);
 
   const handleNavigate = () => {
-    navigate(status === "success" ? "/login" : "/");
+    // If verification was successful, redirect to profile setup instead of login
+    navigate(status === "success" ? "/profile-setup" : "/");
   };
 
   const content = {

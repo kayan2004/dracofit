@@ -148,6 +148,29 @@ class AuthService {
       );
     }
   }
+
+  // Check if user has completed profile setup
+  async hasCompletedProfileSetup() {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return false;
+
+      const response = await api.get("/user-details", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return !!response.data;
+    } catch (error) {
+      // If 404 Not Found, user hasn't completed profile setup
+      if (error.response?.status === 404) {
+        return false;
+      }
+      console.error("Error checking profile setup:", error);
+      return false;
+    }
+  }
 }
 
 export default new AuthService();

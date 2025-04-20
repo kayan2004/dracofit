@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import exercisesService from "../../services/exercisesService";
 import VideoPlayer from "../common/VideoPlayer"; // Import the new component
+import { FaRobot } from "react-icons/fa"; // Import robot icon
+import AskAI from "../common/AskAI";
 
 const ExerciseDetails = () => {
   const { id } = useParams();
@@ -43,6 +45,17 @@ const ExerciseDetails = () => {
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  // Function to navigate to AI chat with prefilled question
+  const navigateToAiChat = (exercise) => {
+    const prefilledQuestion = `How can I perform ${exercise.name} correctly?`;
+    // Navigate to the AI chat page with the question as a parameter
+    navigate(
+      `/ai-chat?question=${encodeURIComponent(prefilledQuestion)}&exerciseId=${
+        exercise.id
+      }`
+    );
   };
 
   if (loading) {
@@ -131,7 +144,7 @@ const ExerciseDetails = () => {
 
             {/* Exercise type badge */}
             {exercise.type && (
-              <span className="px-3 py-1 rounded-full text-sm font-medium bg-dark-slate-gray text-white">
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-700 text-white">
                 {exercise.type}
               </span>
             )}
@@ -139,7 +152,7 @@ const ExerciseDetails = () => {
         </div>
 
         {/* Main content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3">
           {/* Left column - Video/Image and target muscles */}
           <div className="md:col-span-1">
             {/* Use the new VideoPlayer component */}
@@ -147,19 +160,19 @@ const ExerciseDetails = () => {
               url={exercise.videoUrl}
               title={`${exercise.name} demonstration`}
               className="mb-6"
-              fallbackImage={
-                exercise.imageUrl
-                  ? {
-                      src: exercise.imageUrl,
-                      alt: `${exercise.name} demonstration`,
-                    }
-                  : null
-              }
+              // fallbackImage={
+              //   exercise.imageUrl
+              //     ? {
+              //         src: exercise.imageUrl,
+              //         alt: `${exercise.name} demonstration`,
+              //       }
+              //     : null
+              // }
             />
 
             {/* Target muscles */}
-            <div className="bg-gray-800 rounded-xl p-5 mb-6">
-              <h3 className="text-xl text-goldenrod mb-3">Target Muscles</h3>
+            <div className="bg-midnight-green rounded-xl p-5 mb-6">
+              <h3 className="text-xl text-goldenrod mb-3">Primary Muscle</h3>
               <div className="flex flex-wrap gap-2">
                 {exercise.targetMuscles && exercise.targetMuscles.length > 0 ? (
                   exercise.targetMuscles.map((muscle, index) => (
@@ -180,12 +193,12 @@ const ExerciseDetails = () => {
           {/* Right column - Description and instructions */}
           <div className="md:col-span-2">
             {/* Description */}
-            <div className="bg-gray-800 rounded-xl p-6 mb-6">
+            <div className="bg-midnight-green rounded-xl p-6 mb-6">
               <h3 className="text-2xl text-goldenrod mb-4">
                 About This Exercise
               </h3>
               {exercise.description ? (
-                <p className="text-white leading-relaxed whitespace-pre-line">
+                <p className="text-gray leading-relaxed whitespace-pre-line">
                   {exercise.description}
                 </p>
               ) : (
@@ -195,24 +208,19 @@ const ExerciseDetails = () => {
               )}
             </div>
 
-            {/* Instructions (if you want to add this field to your backend) */}
-            <div className="bg-gray-800 rounded-xl p-6 mb-6">
-              <h3 className="text-2xl text-goldenrod mb-4">How To Perform</h3>
-              {exercise.instructions ? (
-                <ol className="text-white leading-relaxed list-decimal pl-5 space-y-2">
-                  {exercise.instructions.split("\n").map((step, index) => (
-                    <li key={index}>{step}</li>
-                  ))}
-                </ol>
-              ) : (
-                <p className="text-gray-400 italic">
-                  Detailed instructions not available for this exercise.
-                </p>
-              )}
+            {/* Replace AskAI component with a button */}
+            <div className="mb-6 bg-dark-aquamarine rounded-lg">
+              <button
+                onClick={() => navigateToAiChat(exercise)}
+                className="w-full  text-midnight-green rounded-xl p-4 flex items-center justify-center transition-colors"
+              >
+                <FaRobot className="text-goldenrod text-xl mr-3" />
+                <span>Ask AI about this exercise</span>
+              </button>
             </div>
 
             {/* Add to workout button */}
-            <div className="mt-8 flex justify-center">
+            {/* <div className="mt-8 flex justify-center">
               <button
                 className="px-6 py-3 bg-goldenrod text-midnight-green-darker rounded-lg border-r-6 border-b-6 border-dark-goldenrod hover:bg-dark-goldenrod transition-colors"
                 onClick={() => {
@@ -222,7 +230,7 @@ const ExerciseDetails = () => {
               >
                 Add to Workout
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

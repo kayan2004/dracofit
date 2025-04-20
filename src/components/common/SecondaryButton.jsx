@@ -16,8 +16,8 @@ const SecondaryButton = ({
       type={type}
       onClick={onClick}
       disabled={disabled || isLoading}
-      className={`flex items-center justify-center text-body rounded-md ${styles}
-      shadow-sm bg-midnight-green border-midnight-green-darker border-r-6 border-b-6
+      className={`flex items-center justify-center rounded-md ${styles}
+      shadow-sm bg-midnight-green border-midnight-green-darker 
        text-goldenrod hover:opacity-75 focus:outline-none 
        disabled:opacity-50 transition-colors ${
          fullWidth ? "w-full" : ""

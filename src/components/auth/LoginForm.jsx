@@ -61,19 +61,16 @@ const LoginForm = ({ onLogin }) => {
     try {
       console.log("Logging in with:", formData);
 
-      // Use login method from AuthContext instead of fetchData
+      // Use login method from AuthContext
       const response = await login(formData);
       console.log("Login successful:", response);
 
-      // Token storage is now handled inside the AuthContext
-
-      // // Call the callback function if provided
-      // if (onLogin) {
-      //   onLogin(response);
-      // }
-
-      // Navigate to exercises page - AuthContext already handled token storage
-      navigate("/exercises");
+      // Check if profile is complete and redirect accordingly
+      if (!response.hasCompletedProfile) {
+        navigate("/profile-setup");
+      } else {
+        navigate("/exercises");
+      }
     } catch (err) {
       console.error("Login error:", err);
       setErrors({
@@ -122,7 +119,13 @@ const LoginForm = ({ onLogin }) => {
         Forgot your password?
       </Link>
 
-      <FormButton type="submit" isLoading={loading} fullWidth>
+      <FormButton
+        type="submit"
+        isLoading={loading}
+        styles="p-4 border-b-6 border-r-6"
+        fontsize="text-heading-4"
+        fullWidth
+      >
         Sign In
       </FormButton>
     </form>
