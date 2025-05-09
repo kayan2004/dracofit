@@ -13,10 +13,7 @@ const ChatInput = ({ onSendMessage, isLoading, isDisabled }) => {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-midnight-green p-4 rounded-lg sticky bottom-0"
-    >
+    <form onSubmit={handleSubmit} className="bg-midnight-green p-4 rounded-lg ">
       <div className="flex items-center">
         <input
           type="text"

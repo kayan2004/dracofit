@@ -71,3 +71,96 @@ input:-webkit-autofill:active {
 button {
   cursor: pointer;
 }
+
+/* Dragon Container Background Styles */
+.dragon-bg-midnight-deep {
+  background-color: var(--color-midnight-green-darker);
+  padding: 2rem; /* Adjust padding as needed */
+  border-radius: 15px; /* Adjust border-radius as needed */
+  /* Add other common styles if desired, e.g., for centering content */
+  /* display: flex; */
+  /* justify-content: center; */
+  /* align-items: center; */
+}
+
+.dragon-bg-slate-to-midnight-gradient {
+  background: linear-gradient(
+    to bottom,
+    var(--color-dark-slate-gray),
+    var(--color-midnight-green)
+  );
+  padding: 2rem;
+  border-radius: 15px;
+}
+
+.dragon-bg-sepia-tone {
+  background-color: var(--color-sepia);
+  padding: 2rem;
+  border-radius: 15px;
+}
+
+.dragon-bg-dark-aqua-solid {
+  background-color: var(--color-dark-aquamarine);
+  padding: 2rem;
+  border-radius: 15px;
+}
+
+.dragon-bg-goldenrod-accented {
+  background-color: var(--color-midnight-green-darker);
+  border: 2px solid var(--color-goldenrod);
+  padding: 2rem;
+  border-radius: 15px;
+}
+
+/* Dragon Container Gradient Backgrounds */
+.dragon-gradient-slate-to-midnight {
+  background: linear-gradient(
+    to bottom,
+    var(--color-dark-slate-gray),
+    var(--color-midnight-green)
+  );
+  /* 'to bottom' is the direction. Other options: to top, to right, to left, to bottom right, etc. */
+  /* Or use an angle: linear-gradient(180deg, var(--color-dark-slate-gray), var(--color-midnight-green)); */
+  padding: 2rem; /* Keep your padding or adjust as needed */
+  /* border-radius: 0; /* If you want sharp corners */
+}
+
+.dragon-gradient-aqua-to-midnight-darker {
+  background: linear-gradient(
+    to bottom right,
+    var(--color-medium-aquamarine),
+    var(--color-midnight-green-darker)
+  );
+  padding: 2rem;
+}
+
+.dragon-gradient-goldenrod-to-sepia {
+  background: linear-gradient(
+    45deg,
+    var(--color-goldenrod),
+    var(--color-sepia)
+  );
+  padding: 2rem;
+}
+
+/* Homepage Body Radial Gradient */
+.homepage-radial-gradient-center-light {
+  background: radial-gradient(
+    ellipse at center,
+    var(--color-medium-aquamarine) 0%,
+    /* Lightest color in the center */ var(--color-dark-slate-gray) 75%
+      /* Darker color towards the edges */
+  );
+  /* min-height: 100vh; /* This is already handled by Tailwind's min-h-screen */
+  /* color: var(--color-white); /* This is already handled by Tailwind's text-white */
+}
+
+/* Alternative if you want a more subtle effect using shades of a dark color */
+.homepage-radial-gradient-dark-subtle {
+  background: radial-gradient(
+    circle at center,
+    var(--color-dark-slate-gray) 0%,
+    /* A slightly lighter dark color */ var(--color-midnight-green-darker) 85%
+      /* Darkest color towards the edges */
+  );
+}

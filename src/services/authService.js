@@ -1,24 +1,4 @@
-import axios from "axios";
-
-// Use environment variable for API URL
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Add auth token to requests if available
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+import api from "./api";
 
 class AuthService {
   // Login user and store token
@@ -169,6 +149,28 @@ class AuthService {
       }
       console.error("Error checking profile setup:", error);
       return false;
+    }
+  }
+
+  /**
+   * Fetches the profile of the currently authenticated user using the stored token.
+   * Assumes an endpoint like GET /auth/profile or GET /users/me exists on the backend.
+   * @returns {Promise<object>} The user profile data.
+   */
+  async getProfile() {
+    try {
+      // Use the imported 'api' instance. The interceptor will add the token.
+      // Adjust the endpoint '/auth/profile' if your backend uses a different one (e.g., '/users/me')
+      const response = await api.get("/auth/profile");
+      console.log("Fetched profile:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error fetching user profile:",
+        error.response?.data || error.message
+      );
+      // Don't necessarily throw here, let the caller handle it (e.g., logout if 401)
+      throw error; // Re-throw the error so the AuthContext can catch it
     }
   }
 }

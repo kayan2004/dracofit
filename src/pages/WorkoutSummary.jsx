@@ -28,21 +28,35 @@ const WorkoutSummary = () => {
     const fetchWorkoutData = async () => {
       try {
         setLoading(true);
+        setError(null); // Reset error on new fetch
 
         // Fetch the workout log
+        console.log(`Fetching workout log with ID: ${workoutLogId}`);
         const workoutData = await workoutLogsService.getWorkoutLog(
           workoutLogId
         );
+        console.log("Workout Log Data:", workoutData);
         setWorkoutLog(workoutData);
 
-        // Fetch the exercise logs
+        // Fetch the exercise logs for this workout log
+        console.log(
+          `Fetching exercise logs for workout log ID: ${workoutLogId}`
+        );
         const exerciseData = await exerciseLogsService.getExerciseLogs(
           workoutLogId
         );
+        console.log("Exercise Logs Data:", exerciseData);
         setExerciseLogs(exerciseData);
       } catch (err) {
         console.error("Error fetching workout summary:", err);
-        setError("Failed to load workout summary. Please try again.");
+        if (err.response) {
+          console.error("Server Response:", err.response.data);
+        }
+        setError(
+          `Failed to load workout summary: ${
+            err.message || "Unknown error"
+          }. Please try again.`
+        );
       } finally {
         setLoading(false);
       }
@@ -51,40 +65,53 @@ const WorkoutSummary = () => {
     fetchWorkoutData();
   }, [workoutLogId]);
 
-  const formatDuration = (seconds) => {
-    if (!seconds) return "0:00";
-
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  // Updated to format minutes
+  const formatDuration = (minutes) => {
+    if (minutes === undefined || minutes === null || isNaN(minutes))
+      return "0 min";
+    const mins = Math.floor(minutes);
+    return `${mins} min`;
   };
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch (e) {
+      return "Invalid Date";
+    }
   };
 
   const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (e) {
+      return "Invalid Time";
+    }
   };
 
+  // Updated to use exerciseLogs and setsData
   const getTotalWeightLifted = () => {
-    if (!exerciseLogs) return 0;
+    if (!exerciseLogs || exerciseLogs.length === 0) return 0;
 
-    return exerciseLogs.reduce((total, exercise) => {
-      if (!exercise.sets) return total;
+    return exerciseLogs.reduce((total, exerciseLog) => {
+      // Use setsData instead of sets
+      if (!exerciseLog.setsData || exerciseLog.setsData.length === 0)
+        return total;
 
-      const exerciseTotal = exercise.sets.reduce(
-        (subtotal, set) => subtotal + (set.weight * set.reps || 0),
+      const exerciseTotal = exerciseLog.setsData.reduce(
+        (subtotal, set) => subtotal + (set.weight || 0) * (set.reps || 0), // Handle potentially missing weight/reps
         0
       );
 
@@ -92,14 +119,17 @@ const WorkoutSummary = () => {
     }, 0);
   };
 
+  // Updated to use exerciseLogs and setsData
   const getTotalReps = () => {
-    if (!exerciseLogs) return 0;
+    if (!exerciseLogs || exerciseLogs.length === 0) return 0;
 
-    return exerciseLogs.reduce((total, exercise) => {
-      if (!exercise.sets) return total;
+    return exerciseLogs.reduce((total, exerciseLog) => {
+      // Use setsData instead of sets
+      if (!exerciseLog.setsData || exerciseLog.setsData.length === 0)
+        return total;
 
-      const exerciseTotal = exercise.sets.reduce(
-        (subtotal, set) => subtotal + (set.reps || 0),
+      const exerciseTotal = exerciseLog.setsData.reduce(
+        (subtotal, set) => subtotal + (set.reps || 0), // Handle potentially missing reps
         0
       );
 
@@ -112,6 +142,7 @@ const WorkoutSummary = () => {
     alert("Sharing functionality will be implemented in the future.");
   };
 
+  // --- Loading State ---
   if (loading) {
     return (
       <div className="min-h-screen bg-dark-slate-gray text-white p-6">
@@ -127,6 +158,7 @@ const WorkoutSummary = () => {
     );
   }
 
+  // --- Error State ---
   if (error) {
     return (
       <div className="min-h-screen bg-dark-slate-gray text-white p-6">
@@ -145,6 +177,8 @@ const WorkoutSummary = () => {
     );
   }
 
+  // --- No Workout Log Found State ---
+  // Check specifically if workoutLog is null AFTER loading and no error
   if (!workoutLog) {
     return (
       <div className="min-h-screen bg-dark-slate-gray text-white p-6">
@@ -152,6 +186,9 @@ const WorkoutSummary = () => {
           <h1 className="text-heading-1 text-goldenrod mb-6">
             Workout Not Found
           </h1>
+          <p className="text-gray-400 mb-6">
+            Could not find details for the requested workout log.
+          </p>
           <div className="flex justify-center">
             <FormButton onClick={() => navigate("/workouts")}>
               Back to Workouts
@@ -162,6 +199,7 @@ const WorkoutSummary = () => {
     );
   }
 
+  // --- Main Content ---
   return (
     <div className="min-h-screen bg-dark-slate-gray text-white p-6">
       <div className="max-w-4xl mx-auto">
@@ -171,7 +209,8 @@ const WorkoutSummary = () => {
             <FaCheckCircle className="inline mr-1" /> Workout Complete!
           </div>
           <h1 className="text-heading-1 text-goldenrod">
-            {workoutLog.workoutPlan.name}
+            {/* Use optional chaining in case workoutPlan is null */}
+            {workoutLog.workoutPlan?.name || "Workout"}
           </h1>
           <p className="text-gray-400">
             {formatDate(workoutLog.startTime)} •{" "}
@@ -188,7 +227,8 @@ const WorkoutSummary = () => {
                   <FaClock className="mr-1" /> Duration
                 </div>
                 <div className="text-2xl md:text-3xl font-bold text-goldenrod">
-                  {formatDuration(workoutLog.durationSeconds)}
+                  {/* Use durationMinutes from workoutLog */}
+                  {formatDuration(workoutLog.durationMinutes)}
                 </div>
               </div>
 
@@ -197,7 +237,8 @@ const WorkoutSummary = () => {
                   <FaDumbbell className="mr-1" /> Exercises
                 </div>
                 <div className="text-2xl md:text-3xl font-bold text-goldenrod">
-                  {exerciseLogs.length}
+                  {/* Check if exerciseLogs is an array */}
+                  {Array.isArray(exerciseLogs) ? exerciseLogs.length : 0}
                 </div>
               </div>
 
@@ -228,59 +269,82 @@ const WorkoutSummary = () => {
             <FaDumbbell className="text-goldenrod mr-2" /> Exercise Details
           </h2>
 
-          {exerciseLogs.map((exerciseLog) => (
-            <div
-              key={exerciseLog.id}
-              className="bg-midnight-green rounded-lg mb-4 overflow-hidden shadow-md"
-            >
-              <div className="bg-dark-slate-gray p-3">
-                <h3 className="font-bold">{exerciseLog.exercise.name}</h3>
-              </div>
-              <div className="p-4">
-                {exerciseLog.sets && exerciseLog.sets.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="text-gray-400 border-b border-gray-700">
-                          <th className="pb-2 text-left">Set</th>
-                          <th className="pb-2 text-right">Weight</th>
-                          <th className="pb-2 text-right">Reps</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {exerciseLog.sets.map((set, index) => (
-                          <tr key={set.id} className="border-b border-gray-800">
-                            <td className="py-2 text-left">{index + 1}</td>
-                            <td className="py-2 text-right">
-                              {set.weight} lbs
-                            </td>
-                            <td className="py-2 text-right">{set.reps}</td>
+          {/* Check if exerciseLogs is an array and has items */}
+          {Array.isArray(exerciseLogs) && exerciseLogs.length > 0 ? (
+            exerciseLogs.map((exerciseLog) => (
+              <div
+                key={exerciseLog.id} // Use exerciseLog.id as key
+                className="bg-midnight-green rounded-lg mb-4 overflow-hidden shadow-md"
+              >
+                <div className="bg-dark-slate-gray p-3">
+                  {/* Use optional chaining for safety */}
+                  <h3 className="font-bold">
+                    {exerciseLog.exercise?.name || "Unknown Exercise"}
+                  </h3>
+                </div>
+                <div className="p-4">
+                  {/* Check setsData instead of sets */}
+                  {exerciseLog.setsData && exerciseLog.setsData.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-gray-400 border-b border-gray-700">
+                            <th className="pb-2 text-left">Set</th>
+                            <th className="pb-2 text-right">Weight</th>
+                            <th className="pb-2 text-right">Reps</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="text-gray-400 italic text-sm">
-                    No sets recorded
-                  </p>
-                )}
+                        </thead>
+                        <tbody>
+                          {/* Iterate over setsData */}
+                          {exerciseLog.setsData.map((set, index) => (
+                            // Use index or set.setNumber for key if set.id doesn't exist
+                            <tr
+                              key={`${exerciseLog.id}-set-${index}`}
+                              className="border-b border-gray-800"
+                            >
+                              {/* Use set.setNumber if available, otherwise index + 1 */}
+                              <td className="py-2 text-left">
+                                {set.setNumber ?? index + 1}
+                              </td>
+                              <td className="py-2 text-right">
+                                {/* Display weight or '-' if undefined/null */}
+                                {set.weight !== undefined && set.weight !== null
+                                  ? `${set.weight} lbs`
+                                  : "-"}
+                              </td>
+                              <td className="py-2 text-right">
+                                {set.reps ?? "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-gray-400 italic text-sm">
+                      No sets recorded for this exercise.
+                    </p>
+                  )}
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="bg-midnight-green rounded-lg p-4 text-center text-gray-400">
+              No exercises were logged for this workout.
             </div>
-          ))}
+          )}
         </div>
 
-        {/* Notes and achievements */}
-        <div className="bg-midnight-green rounded-lg p-6 mb-8">
+        {/* Notes and achievements (Keep as is, assuming workoutLog.notes exists) */}
+        {/* <div className="bg-midnight-green rounded-lg p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <FaRegCalendarCheck className="text-goldenrod mr-2" /> Workout Notes
           </h2>
-
           <p className="text-gray-300 mb-4">
             {workoutLog.notes || "No notes recorded for this workout."}
-          </p>
-
-          <div className="mt-6 pt-6 border-t border-gray-700">
+          </p> */}
+        {/* Achievements section can remain */}
+        {/* <div className="mt-6 pt-6 border-t border-gray-700">
             <div className="flex items-center mb-3">
               <FaTrophy className="text-goldenrod mr-2" />
               <h3 className="text-lg font-semibold">Achievements</h3>
@@ -299,10 +363,10 @@ const WorkoutSummary = () => {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
 
-        {/* Action buttons */}
+        {/* Action buttons (Keep as is)
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex space-x-3">
             <Link to="/workouts">
@@ -323,7 +387,7 @@ const WorkoutSummary = () => {
           >
             <FaShareAlt className="mr-2" /> Share Workout
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

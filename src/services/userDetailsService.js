@@ -35,50 +35,75 @@ api.interceptors.response.use(
   }
 );
 
+const API_ENDPOINT = "/user-details";
+
+const createUserDetails = async (detailsData) => {
+  try {
+    const response = await api.post(API_ENDPOINT, detailsData);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error creating user details:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+const getUserDetails = async () => {
+  try {
+    const response = await api.get(API_ENDPOINT);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching user details:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+const updateUserDetails = async (detailsData) => {
+  try {
+    const response = await api.patch(API_ENDPOINT, detailsData);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error updating user details:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+const uploadProfilePicture = async (formData) => {
+  try {
+    // The endpoint path must match your backend controller exactly
+    const response = await api.post(
+      `${API_ENDPOINT}/profile-picture`,
+      formData,
+      {
+        headers: {
+          // Axios might set this automatically for FormData, but explicitly setting it can sometimes help
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data; // Should return { profilePictureUrl: '...' }
+  } catch (error) {
+    console.error(
+      "Error uploading profile picture:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
 const userDetailsService = {
-  // Get user details
-  async getUserDetails() {
-    try {
-      const response = await api.get("/user-details");
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching user details:", error);
-      throw error;
-    }
-  },
-
-  // Create user details
-  async createUserDetails(userDetails) {
-    try {
-      const response = await api.post("/user-details", userDetails);
-      return response.data;
-    } catch (error) {
-      console.error("Error creating user details:", error);
-      throw error;
-    }
-  },
-
-  // Update user details
-  async updateUserDetails(userDetails) {
-    try {
-      const response = await api.patch("/user-details", userDetails);
-      return response.data;
-    } catch (error) {
-      console.error("Error updating user details:", error);
-      throw error;
-    }
-  },
-
-  // Delete user details
-  async deleteUserDetails() {
-    try {
-      const response = await api.delete("/user-details");
-      return response.data;
-    } catch (error) {
-      console.error("Error deleting user details:", error);
-      throw error;
-    }
-  },
+  createUserDetails,
+  getUserDetails,
+  updateUserDetails,
+  uploadProfilePicture, // Export the new function
 };
 
 export default userDetailsService;

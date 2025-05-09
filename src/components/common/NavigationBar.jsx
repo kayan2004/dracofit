@@ -121,10 +121,10 @@ const NavigationBar = ({ className = "" }) => {
     },
     {
       name: "Friends",
-      path: "/friends",
+      path: "/feed",
       icon: FriendsIcon,
-      active: location.pathname.includes("/friends"),
-      enabled: false, // Not yet functional
+      active: location.pathname.includes("/feed"),
+      enabled: true, // Not yet functional
     },
     {
       name: "Chatbot",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; // Ensure useRef is imported
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import workoutsService from "../services/workoutsService";
@@ -28,6 +28,14 @@ const WorkoutSession = () => {
     type: "",
   });
 
+  // This ref will store the workoutId that has been successfully initialized
+  // (i.e., workout details fetched AND initial log created).
+  const initializedSessionId = useRef(null);
+
+  // Ref to track workoutIds for which an initialization attempt has been made
+  // during the lifecycle of this component instance.
+  const initializationAttemptedFor = useRef(new Set());
+
   const showNotification = (message, type = "success") => {
     setNotification({ show: true, message, type });
     setTimeout(() => {
@@ -37,82 +45,117 @@ const WorkoutSession = () => {
 
   // Fetch workout details and create initial workout log
   useEffect(() => {
-    const fetchWorkoutDetails = async () => {
+    if (!workoutId) {
+      setError("Workout ID is missing.");
+      setLoading(false);
+      return;
+    }
+
+    // If an initialization attempt for THIS workoutId has already been made
+    // in this component's current lifecycle, do not attempt again.
+    // This is the primary guard against StrictMode's double invocation causing duplicate API calls.
+    if (initializationAttemptedFor.current.has(workoutId)) {
+      console.log(
+        `(Effect) Initialization already attempted for workoutId ${workoutId}. Skipping actual re-initialization.`
+      );
+      // It's possible setLoading(true) was called by the first (now skipped) attempt.
+      // If the first attempt is still in progress, it will eventually set setLoading(false).
+      // If it completed, state should be fine.
+      // If it failed, error state should be set.
+      // For safety, if we are skipping, ensure loading is false if no other process will set it.
+      // However, this might be too aggressive if the first attempt is genuinely still loading.
+      // Let's assume the first attempt will manage its own loading state.
+      return;
+    }
+
+    // Mark that an initialization attempt is now being made for this workoutId.
+    // This is done *synchronously* before any async operations.
+    initializationAttemptedFor.current.add(workoutId);
+    console.log(
+      `(Effect) First attempt for workoutId ${workoutId}. Marking as attempted.`
+    );
+
+    const initializeWorkoutSession = async () => {
+      console.log(
+        `(Effect) Starting actual initialization logic for workoutId: ${workoutId}`
+      );
+      setLoading(true);
+      setError(null);
+      // Reset states that depend on workoutId to avoid showing stale data from a previous session
+      setWorkout(null);
+      setWorkoutLog(null);
+      setStartTime(null);
+      setCurrentExerciseIndex(0);
+      setCurrentSetIndex(0);
+      setCompletedExercises([]);
+      setCurrentExerciseSetData([]);
+
       try {
-        setLoading(true);
-
         // Step 1: Get workout plan data
-        console.log(`Fetching workout plan with ID: ${workoutId}`);
         const workoutData = await workoutsService.getWorkoutById(workoutId);
-        console.log("Workout plan data received:", workoutData);
-
-        // Step 2: Get workout exercises separately
-        console.log(`Fetching exercises for workout plan ${workoutId}`);
         const exercisesData = await workoutExercisesService.getWorkoutExercises(
           workoutId
         );
-        console.log("Workout exercises received:", exercisesData);
-
-        // Step 3: Combine the data
         const combinedData = {
           ...workoutData,
           exercises: exercisesData.map((item) => {
-            // Extract exercise details and workout-exercise relationship details
             const exercise = item.exercise || {};
             return {
-              id: exercise.id, // Exercise ID
-              exerciseId: exercise.id, // Duplicate for flexibility in access
+              id: exercise.id,
+              exerciseId: exercise.id,
               name: exercise.name || "Unknown Exercise",
               muscleGroup: exercise.muscleGroup || exercise.target || "Various",
               instructions: exercise.instructions || "",
-              sets: item.sets || 3, // Sets from workout-exercise relationship
-              reps: item.reps || 10, // Reps from workout-exercise relationship
+              sets: item.sets || 3,
+              reps: item.reps || 10,
               restTimeSeconds: item.restTimeSeconds || 60,
             };
           }),
         };
 
-        console.log("Combined workout data with exercises:", combinedData);
-
-        // Verify we have exercises
         if (!combinedData.exercises || combinedData.exercises.length === 0) {
-          console.error("No exercises found in the workout data");
           setError(
             "This workout has no exercises. Please add exercises to the workout first."
           );
-          setLoading(false);
+          setLoading(false); // Set loading false as we are returning
           return;
         }
-
         setWorkout(combinedData);
 
-        // Create the initial workout log with 0 duration
+        // Step 2: Create the initial workout log
         console.log(
-          "Creating initial workout log with workoutPlanId:",
+          "(Effect) Creating initial workout log for workoutPlanId:",
           parseInt(workoutId)
         );
         const initialWorkoutLog = await workoutLogsService.startWorkout({
           workoutPlanId: parseInt(workoutId),
-          durationMinutes: 0, // Start with 0 duration (using minutes now)
         });
 
-        console.log("Initial workout log created:", initialWorkoutLog);
+        console.log("(Effect) Initial workout log created:", initialWorkoutLog);
         setWorkoutLog(initialWorkoutLog);
-        setStartTime(new Date());
-        setLoading(false);
+        setStartTime(new Date(initialWorkoutLog.startTime || Date.now()));
       } catch (err) {
-        console.error("Error initializing workout:", err);
+        console.error("(Effect) Error initializing workout:", err);
         if (err.response) {
-          console.error("Error response status:", err.response.status);
-          console.error("Error response data:", err.response.data);
+          console.error("(Effect) Error response status:", err.response.status);
+          console.error("(Effect) Error response data:", err.response.data);
         }
         setError(`Failed to start workout: ${err.message || "Unknown error"}`);
+        // If initialization fails, we might want to allow a retry if the user navigates away
+        // and back (which would be a new component instance with a fresh ref).
+        // For this specific component instance, the attempt was made.
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchWorkoutDetails();
-  }, [workoutId]);
+    initializeWorkoutSession();
+
+    // No cleanup function is strictly needed to modify `initializationAttemptedFor.current`
+    // for this specific problem of double POSTs. The ref's state persists for the
+    // component's lifecycle. If `workoutId` changes, the `.has(newWorkoutId)` check
+    // will be false for the new ID, and a new attempt will be made and recorded.
+  }, [workoutId]); // Only re-run if workoutId changes.
 
   // Handle exercise set completion
   const handleSetComplete = async (setData) => {
@@ -229,23 +272,23 @@ const WorkoutSession = () => {
         return;
       }
 
-      const endTime = new Date();
-      // Calculate duration in minutes instead of seconds
-      const durationSeconds = Math.round((endTime - startTime) / 1000);
+      const currentEndTime = new Date(); // Get the current time as endTime
+      const durationSeconds = Math.round((currentEndTime - startTime) / 1000);
       const durationMinutes = Math.round(durationSeconds / 60);
 
       console.log(
-        "Completing workout, duration in seconds:",
-        durationSeconds,
-        "converted to minutes:",
+        "Completing workout, endTime:",
+        currentEndTime.toISOString(),
+        "duration in minutes:",
         durationMinutes
       );
 
-      // Update the existing workout log with the final duration and completed status
+      // Update the existing workout log
       const completedWorkout = await workoutLogsService.completeWorkout(
         workoutLog.id,
         {
-          durationMinutes: durationMinutes,
+          // durationMinutes: durationMinutes, // You can still send this if your backend uses it for other things
+          endTime: currentEndTime.toISOString(), // Send endTime as an ISO string
         }
       );
 
@@ -258,7 +301,17 @@ const WorkoutSession = () => {
       }, 1500);
     } catch (err) {
       console.error("Error completing workout:", err);
-      showNotification(`Failed to complete workout: ${err.message}`, "error");
+      if (err.response) {
+        console.error("Error response data:", err.response.data);
+        showNotification(
+          `Failed to complete workout: ${
+            err.response.data?.message || err.message
+          }`,
+          "error"
+        );
+      } else {
+        showNotification(`Failed to complete workout: ${err.message}`, "error");
+      }
     }
   };
 

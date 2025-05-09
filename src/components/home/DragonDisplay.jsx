@@ -248,7 +248,7 @@ const DragonDisplay = ({
   };
 
   return (
-    <div className="w-64 h-64 bg-gray-800/50 rounded-full flex justify-center items-center border-2 border-goldenrod/30">
+    <div className="w-44 h-44 flex justify-center items-center md:h-64 md:w-64">
       <div className="text-center w-full">
         {/* Loading indicator */}
         {isLoading && (

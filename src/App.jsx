@@ -21,6 +21,9 @@ import Chatbot from "./pages/Chatbot";
 import ProfileSetup from "./pages/ProfileSetup";
 import WorkoutSession from "./pages/WorkoutSession";
 import WorkoutSummary from "./pages/WorkoutSummary";
+import Friends from "./pages/Friends";
+import FriendFeed from "./pages/FriendFeed";
+
 function App() {
   return (
     <BrowserRouter>
@@ -37,7 +40,6 @@ function App() {
               path="/waiting-verification"
               element={<WaitingForVerification />}
             />
-
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/profile-setup" element={<ProfileSetup />} />
@@ -53,15 +55,15 @@ function App() {
                 path="/workout-summary/:workoutLogId"
                 element={<WorkoutSummary />}
               />
+              <Route path="/friends" element={<Friends />} />
+              <Route path="/feed" element={<FriendFeed />} />
             </Route>
-
             {/* Workout routes */}
             <Route path="/workouts" element={<Workouts />} />
             <Route path="/workouts/:id" element={<Workouts />} />
             <Route path="/workouts/create" element={<WorkoutForm />} />
             <Route path="/workouts/edit/:id" element={<WorkoutForm />} />
             <Route path="/schedule" element={<EditSchedule />} />
-
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />
           </Routes>

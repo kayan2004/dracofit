@@ -14,6 +14,19 @@ const api = axios.create({
   timeout: 200000, // 30-second timeout for model responses
 });
 
+const checkHealth = async () => {
+  try {
+    const response = await api.get("/health");
+    return {
+      online: response.data.status === "success",
+      details: response.data.data || {},
+    };
+  } catch (error) {
+    console.error("Error checking chatbot health:", error);
+    return { online: false, error: error.message };
+  }
+};
+
 const chatbotService = {
   async sendMessage(message) {
     try {
@@ -31,18 +44,7 @@ const chatbotService = {
     }
   },
 
-  async checkHealth() {
-    try {
-      const response = await api.get("/health");
-      return {
-        online: response.data.status === "success",
-        details: response.data.data || {},
-      };
-    } catch (error) {
-      console.error("Error checking chatbot health:", error);
-      return { online: false, error: error.message };
-    }
-  },
+  checkHealth,
 };
 
 export default chatbotService;

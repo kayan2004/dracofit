@@ -96,9 +96,9 @@ const Home = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-slate-gray text-white">
+    <div className="min-h-screen homepage-radial-gradient-dark-subtle text-white">
       {/* Profile Header with Username and Settings */}
-      <header className="bg-gray-800 py-4 px-6 flex justify-between items-center shadow-md">
+      <header className="bg-midnight-green py-4 px-6 flex justify-between items-center shadow-md">
         <div className="flex items-center">
           <span className="text-lg font-semibold text-goldenrod">
             Hi, {userData.username}!
@@ -221,32 +221,16 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Dragon Display Area */}
-      <div className="flex justify-center items-center mt-12">
+      <div className="flex justify-center items-center mt-10  ">
+        {" "}
+        {/* CHOOSE YOUR STYLE HERE */}
         <DragonDisplay
+        // Pass the necessary props from your petData state
         // level={petData.level}
+        // name={petData.name}
         // stage={petData.stage}
         // animation={petData.animation}
-        // name={petData.name}
         />
-      </div>
-
-      {/* Quick Actions */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-800 py-4 mb-16 sm:mb-0">
-        <div className="max-w-md mx-auto px-4 flex justify-around">
-          <Link
-            to="/workouts/create"
-            className="bg-goldenrod text-midnight-green px-6 py-3 rounded-lg font-bold hover:bg-dark-goldenrod transition-colors"
-          >
-            Create Workout
-          </Link>
-          <Link
-            to="/workouts"
-            className="bg-gray-700 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors"
-          >
-            View Workouts
-          </Link>
-        </div>
       </div>
     </div>
   );

@@ -160,6 +160,42 @@ const workoutLogsService = {
   },
 
   /**
+   * Get workout logs within a specific date range, optionally for a specific plan.
+   * @param {Object} params - Query parameters
+   * @param {string} params.startDate - ISO string for start date/time
+   * @param {string} params.endDate - ISO string for end date/time
+   * @param {number} [params.workoutPlanId] - Optional workout plan ID
+   * @returns {Promise<Array>} Promise with an array of workout logs
+   */
+  async getLogsByDateRange(params) {
+    try {
+      const queryString = new URLSearchParams({
+        startDate: params.startDate,
+        endDate: params.endDate,
+      });
+      if (params.workoutPlanId !== undefined) {
+        queryString.append("workoutPlanId", params.workoutPlanId);
+      }
+
+      console.log(
+        `Fetching logs by date: /workout-logs/by-date?${queryString.toString()}`
+      );
+      const response = await api.get(
+        `/workout-logs/by-date?${queryString.toString()}`
+      );
+      console.log("Logs received:", response.data);
+      return response.data; // Should be an array of logs
+    } catch (error) {
+      console.error("Error fetching workout logs by date range:", error);
+      throw (
+        error.response?.data || {
+          message: "Failed to fetch workout logs by date",
+        }
+      );
+    }
+  },
+
+  /**
    * Update a workout log
    * @param {number} id - Workout log ID
    * @param {Object} updateData - Data to update
