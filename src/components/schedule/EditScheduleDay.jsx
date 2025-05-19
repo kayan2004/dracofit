@@ -105,7 +105,7 @@ const EditScheduleDay = ({
         <div>
           <label
             htmlFor="workoutPlanId"
-            className="block text-goldenrod mb-2 flex items-center"
+            className=" text-goldenrod mb-2 flex items-center"
           >
             <FaDumbbell className="mr-2" /> Select Workout
           </label>
@@ -160,7 +160,7 @@ const EditScheduleDay = ({
           <div>
             <label
               htmlFor="preferredTime"
-              className="block text-goldenrod mb-2 flex items-center"
+              className=" text-goldenrod mb-2 flex items-center"
             >
               <FaRegClock className="mr-2" /> Preferred Time
             </label>
@@ -182,7 +182,7 @@ const EditScheduleDay = ({
         <div>
           <label
             htmlFor="notes"
-            className="block text-goldenrod mb-2 flex items-center"
+            className=" text-goldenrod mb-2 flex items-center"
           >
             <FaRegStickyNote className="mr-2" /> Notes (Optional)
           </label>

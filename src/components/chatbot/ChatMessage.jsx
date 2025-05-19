@@ -1,31 +1,28 @@
-import React from "react";
+import React, { useState, useEffect } from "react"; // Added useState and useEffect
 import { FaUser, FaRobot } from "react-icons/fa";
 import { format } from "date-fns";
 
-const ChatMessage = ({ message }) => {
-  // --- Log the received message prop on every render ---
-  // console.log(`[ChatMessage Render] ID: ${message.id}, Message Prop:`, message);
-
+// Assume userProfilePicUrl will be passed as a prop
+const ChatMessage = ({ message, userProfilePicUrl }) => {
   const { sender, text, timestamp, isLoading, isError } = message;
   const isUser = sender === "user";
-  const isSystem = sender === "system"; // Keep track of system messages
+  const isSystem = sender === "system";
+
+  // State to handle user profile image loading error
+  const [profileImgError, setProfileImgError] = useState(false);
+
+  // Reset error if URL changes (e.g., user logs out and logs in as someone else, or URL is updated)
+  useEffect(() => {
+    setProfileImgError(false);
+  }, [userProfilePicUrl]);
 
   const renderContent = () => {
-    // --- Log decision variables ---
-    // console.log(
-    //   `[ChatMessage RenderContent] ID: ${message.id}, isLoading: ${isLoading}, isError: ${isError}, text: "${text}"`
-    // );
-
-    // --- Original Logic ---
     if (isLoading) {
-      // --- MODIFICATION: Render text EVEN IF loading, if text exists ---
-      // This allows progressive display while the spinner might still be needed conceptually
       if (text && text.trim().length > 0) {
         return (
           <p className="whitespace-pre-wrap input-case">{text.toLowerCase()}</p>
         );
       } else {
-        // Only show spinner if loading AND no text yet
         return (
           <div className="flex items-center space-x-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -45,55 +42,56 @@ const ChatMessage = ({ message }) => {
   };
 
   return (
-    // --- Revert: Apply justify-end for user, justify-start for bot, justify-center for system ---
     <div
       className={`flex mb-4 ${
         isUser ? "justify-end" : isSystem ? "justify-center" : "justify-start"
       }`}
     >
-      {/* --- Revert: Add back flex-row-reverse for user messages --- */}
       <div
         className={`flex items-start max-w-xs md:max-w-md lg:max-w-lg ${
-          isUser ? "flex-row-reverse" : "flex-row" // Added back conditional flex-row-reverse
+          isUser ? "flex-row-reverse" : "flex-row"
         }`}
       >
-        {/* Icon */}
         {!isSystem && (
           <div
-            // --- Revert: Conditional margin based on user/bot ---
-            className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
-              isUser ? "ml-3 bg-goldenrod" : "mr-3 bg-dark-aquamarine" // Added back conditional margin
+            className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center overflow-hidden ${
+              // Added overflow-hidden
+              isUser ? "ml-3 " : "mr-3 bg-dark-aquamarine"
             }`}
           >
             {isUser ? (
-              <FaUser className="text-midnight-green text-lg" />
+              userProfilePicUrl && !profileImgError ? ( // Check for URL and no error
+                <img
+                  src={userProfilePicUrl}
+                  alt="User"
+                  className="h-full w-full object-cover" // Ensure image covers the area
+                  onError={() => setProfileImgError(true)} // Set error on load failure
+                />
+              ) : (
+                <FaUser className="text-midnight-green text-lg" /> // Fallback icon
+              )
             ) : (
               <FaRobot className="text-midnight-green text-lg" />
             )}
           </div>
         )}
 
-        {/* Message Bubble */}
         <div
           className={`px-4 py-2 rounded-lg ${
             isUser
-              ? "bg-goldenrod text-midnight-green" // User bubble style
+              ? "bg-goldenrod text-midnight-green"
               : isSystem
-              ? "bg-gray-700 text-gray-300 italic" // System bubble style
-              : "bg-midnight-green text-gray" // Bot bubble style
+              ? "bg-gray-700 text-gray-300 italic"
+              : "bg-midnight-green text-gray-300" // Ensured bot text is light on dark background
           } ${isSystem ? "max-w-full text-sm" : ""}`}
         >
-          {/* Render content */}
           {renderContent()}
-
-          {/* Timestamp */}
           {!isSystem && !isLoading && timestamp && (
-            // --- Revert: Conditional text alignment for timestamp ---
             <div
               className={`text-xs mt-1 ${
                 isUser
-                  ? "text-midnight-green-darker/70 text-right" // User timestamp color and alignment
-                  : "text-gray-400 text-left" // Bot timestamp color and alignment
+                  ? "text-midnight-green-darker/70 text-right"
+                  : "text-gray-400 text-left"
               }`}
             >
               {format(new Date(timestamp), "p")}

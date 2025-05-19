@@ -161,37 +161,42 @@ const workoutLogsService = {
 
   /**
    * Get workout logs within a specific date range, optionally for a specific plan.
-   * @param {Object} params - Query parameters
-   * @param {string} params.startDate - ISO string for start date/time
-   * @param {string} params.endDate - ISO string for end date/time
-   * @param {number} [params.workoutPlanId] - Optional workout plan ID
+   * @param {Date} startDate - JavaScript Date object for the start of the range
+   * @param {Date} endDate - JavaScript Date object for the end of the range
+   * @param {number} [workoutPlanId] - Optional workout plan ID (if you want to re-add this functionality)
    * @returns {Promise<Array>} Promise with an array of workout logs
    */
-  async getLogsByDateRange(params) {
-    try {
-      const queryString = new URLSearchParams({
-        startDate: params.startDate,
-        endDate: params.endDate,
-      });
-      if (params.workoutPlanId !== undefined) {
-        queryString.append("workoutPlanId", params.workoutPlanId);
-      }
+  async getLogsByDateRange(startDate, endDate, workoutPlanId) {
+    console.log("[workoutLogsService] Fetching logs by date range:");
+    console.log(
+      "[workoutLogsService] StartDate being sent to backend:",
+      startDate
+    );
+    console.log("[workoutLogsService] EndDate being sent to backend:", endDate);
+    if (workoutPlanId) {
+      console.log("[workoutLogsService] WorkoutPlanId:", workoutPlanId);
+    }
 
+    try {
+      const params = {
+        startDate: startDate.toISOString(), // Ensure ISO string format
+        endDate: endDate.toISOString(), // Ensure ISO string format
+      };
+      if (workoutPlanId) {
+        params.workoutPlanId = workoutPlanId;
+      }
+      const response = await api.get(`/workout-logs/by-date`, { params });
       console.log(
-        `Fetching logs by date: /workout-logs/by-date?${queryString.toString()}`
+        "[workoutLogsService] Response from /by-date:",
+        response.data
       );
-      const response = await api.get(
-        `/workout-logs/by-date?${queryString.toString()}`
-      );
-      console.log("Logs received:", response.data);
-      return response.data; // Should be an array of logs
+      return response.data;
     } catch (error) {
-      console.error("Error fetching workout logs by date range:", error);
-      throw (
-        error.response?.data || {
-          message: "Failed to fetch workout logs by date",
-        }
+      console.error(
+        "Error fetching workout logs by date range:",
+        error.response || error.message
       );
+      throw error;
     }
   },
 

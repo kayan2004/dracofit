@@ -1,10 +1,11 @@
 import axios from "axios";
+import api from "./api"; // Ensure api is imported
 
 // Use environment variable for API URL with fallback
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 // Create axios instance with default config
-const api = axios.create({
+const axiosInstance = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
@@ -12,7 +13,7 @@ const api = axios.create({
 });
 
 // Add auth token to requests if available
-api.interceptors.request.use((config) => {
+axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -21,7 +22,7 @@ api.interceptors.request.use((config) => {
 });
 
 // Add response interceptor for error handling
-api.interceptors.response.use(
+axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     // Handle authorization errors
@@ -35,14 +36,16 @@ api.interceptors.response.use(
   }
 );
 
+const API_URL_PET = "/user-pets";
+
 const userPetService = {
   async getUserPet() {
     try {
-      const response = await api.get("/user-pets");
+      const response = await api.get(API_URL_PET); // Use API_URL_PET
       return response.data;
     } catch (error) {
       console.error("Error fetching user pet:", error);
-      // Return default pet data if API call fails
+      // Consider if returning default data is always desired or if throwing error is better
       return {
         name: "Dragon",
         level: 1,
@@ -50,6 +53,9 @@ const userPetService = {
         currentAnimation: "idle",
         healthPoints: 100,
         currentStreak: 0,
+        // maxHealth: 100, // maxHealth is not on the entity
+        xp: 0,
+        xpToNextLevel: 100,
       };
     }
   },
@@ -71,6 +77,36 @@ const userPetService = {
     } catch (error) {
       console.error("Error resurrecting pet:", error);
       throw error;
+    }
+  },
+
+  /**
+   * Update user pet streak (called after workout completion)
+   */
+  async updateStreak() {
+    try {
+      const response = await api.post(`${API_URL_PET}/streak`);
+      console.log("Streak updated successfully:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error updating streak:",
+        error.response?.data || error.message
+      );
+      throw error;
+    }
+  },
+
+  async restartJourney() {
+    try {
+      const response = await api.post(`${API_URL_PET}/restart-journey`);
+      return response.data; // Backend returns the new pet object
+    } catch (error) {
+      console.error(
+        "Error restarting journey:",
+        error.response?.data || error.message
+      );
+      throw error.response?.data || new Error("Failed to restart journey");
     }
   },
 };

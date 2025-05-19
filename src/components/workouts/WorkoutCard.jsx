@@ -107,11 +107,11 @@ const WorkoutCard = ({ workout, onEdit, onDelete, isOwner = false }) => {
 
         {/* Workout stats */}
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="bg-gray-700 p-2 rounded-lg text-center">
+          <div className="bg-midnight-green-darker p-2 rounded-lg text-center">
             <p className="text-tiny text-gray">EXERCISES</p>
             <p className="text-goldenrod font-bold">{exerciseCount}</p>
           </div>
-          <div className="bg-gray-700 p-2 rounded-lg text-center">
+          <div className="bg-midnight-green-darker p-2 rounded-lg text-center">
             <p className="text-tiny text-gray">DURATION</p>
             <p className="text-goldenrod font-bold">{formattedDuration}</p>
           </div>
@@ -151,7 +151,7 @@ const WorkoutCard = ({ workout, onEdit, onDelete, isOwner = false }) => {
               {onEdit && (
                 <button
                   onClick={() => onEdit(workout)}
-                  className="bg-gray-700 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                  className="bg-midnight-green-darker text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors"
                 >
                   Edit
                 </button>
@@ -160,7 +160,7 @@ const WorkoutCard = ({ workout, onEdit, onDelete, isOwner = false }) => {
               {onDelete && (
                 <button
                   onClick={() => onDelete(workout.id)}
-                  className="bg-gray-700 text-white px-3 py-2 rounded-lg hover:bg-red-800 transition-colors"
+                  className="bg-dark-slate-gray/50 text-white px-3 py-2 rounded-lg hover:bg-red-800 transition-colors"
                 >
                   Delete
                 </button>

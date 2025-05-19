@@ -23,11 +23,12 @@ import WorkoutSession from "./pages/WorkoutSession";
 import WorkoutSummary from "./pages/WorkoutSummary";
 import Friends from "./pages/Friends";
 import FriendFeed from "./pages/FriendFeed";
+import ExerciseProgressPage from "./pages/ExerciseProgressPage";
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="pb-20 bg-dark-slate-gray">
+      <div className="pb-20  bg-dark-slate-gray">
         <AuthProvider>
           <Routes>
             {/* Public routes */}
@@ -45,6 +46,10 @@ function App() {
               <Route path="/profile-setup" element={<ProfileSetup />} />
               <Route path="/exercises" element={<Exercises />} />
               <Route path="/exercises/:id" element={<Exercise />} />
+              <Route
+                path="/exercises/:exerciseId/progress"
+                element={<ExerciseProgressPage />}
+              />
               <Route path="/settings" element={<Settings />} />
               <Route path="/chatbot" element={<Chatbot />} />
               <Route

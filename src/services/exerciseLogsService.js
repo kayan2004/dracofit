@@ -155,6 +155,39 @@ const exerciseLogsService = {
       throw error.response?.data || { message: "Failed to delete set" };
     }
   },
+
+  // --- NEW METHOD ---
+  /**
+   * Get historical log data for a specific exercise.
+   * @param {number} exerciseId - The ID of the exercise.
+   * @returns {Promise<Array>} Promise with an array of exercise log history.
+   */
+  async getExerciseHistory(exerciseId) {
+    try {
+      console.log(
+        `[exerciseLogsService] Fetching history for exercise ID: ${exerciseId}`
+      );
+      const response = await api.get(
+        `/exercise-analytics/history/${exerciseId}`
+      );
+      console.log(
+        `[exerciseLogsService] History for exercise ${exerciseId}:`,
+        response.data
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        `[exerciseLogsService] Error fetching history for exercise ${exerciseId}:`,
+        error.response?.data || error.message || error
+      );
+      throw (
+        error.response?.data || {
+          message: `Failed to fetch history for exercise ${exerciseId}`,
+        }
+      );
+    }
+  },
+  // --- END NEW METHOD ---
 };
 
 export default exerciseLogsService;

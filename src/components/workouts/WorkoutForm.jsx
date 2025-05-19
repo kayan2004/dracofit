@@ -369,7 +369,7 @@ const WorkoutForm = () => {
     };
 
     return (
-      <div className="border border-gray-600 rounded-lg p-4 bg-gray-800">
+      <div className="border border-gray-600 rounded-lg p-4 bg-midnight-green">
         <h3 className="text-heading-4 text-goldenrod mb-4">Add Exercise</h3>
 
         <div className="mb-4">
@@ -544,7 +544,7 @@ const WorkoutForm = () => {
                     name="name"
                     value={workout.name}
                     onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-goldenrod"
+                    className="w-full bg-midnight-green-darker   rounded-lg px-3 py-2 text-goldenrod focus:outline-none focus:border-goldenrod"
                     placeholder="e.g., Full Body Strength"
                     required
                     maxLength={100}
@@ -568,7 +568,7 @@ const WorkoutForm = () => {
                     value={workout.durationMinutes}
                     onChange={handleDurationChange}
                     min="1"
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-goldenrod"
+                    className="w-full bg-midnight-green-darker  rounded-lg px-3 py-2 text-goldenrod focus:outline-none focus:border-goldenrod"
                     required
                   />
                 </div>
@@ -585,7 +585,7 @@ const WorkoutForm = () => {
                     name="type"
                     value={workout.type}
                     onChange={handleInputChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-goldenrod"
+                    className="w-full bg-midnight-green-darker rounded-lg px-3 py-2 text-goldenrod focus:outline-none focus:border-goldenrod"
                     required
                   >
                     {workoutTypes.map((type) => (
@@ -611,7 +611,7 @@ const WorkoutForm = () => {
                   onChange={handleInputChange}
                   rows="4"
                   maxLength={1000}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-goldenrod"
+                  className="w-full bg-midnight-green-darker rounded-lg px-3 py-2 text-goldenrod focus:outline-none focus:border-goldenrod"
                   placeholder="Describe your workout plan..."
                 ></textarea>
                 <div className="text-xs text-gray mt-1">
@@ -636,16 +636,18 @@ const WorkoutForm = () => {
 
               {workoutExercises.length > 0 ? (
                 <div className={`mb-${isAddingExercise ? "4" : "0"}`}>
-                  <h3 className="text-heading-4 mb-4">Selected Exercises</h3>
+                  <h3 className="text-heading-4 mb-4 text-gray">
+                    Selected Exercises
+                  </h3>
                   <div className="space-y-4">
                     {workoutExercises.map((exerciseItem, index) => (
                       <div
                         key={index}
-                        className="bg-dark-aquamarine rounded-lg p-4"
+                        className="bg-dark-aquamarine/70 rounded-lg p-4"
                       >
                         <div className="flex flex-col md:flex-row md:items-center gap-4">
                           {/* Order indicator */}
-                          <div className="flex-shrink-0 flex items-center justify-center bg-midnight-green h-8 w-8 rounded-full">
+                          <div className="flex-shrink-0 flex items-center justify-center bg-midnight-green h-10 w-10 rounded-full">
                             <span className="text-goldenrod font-bold">
                               {index + 1}
                             </span>
@@ -660,14 +662,14 @@ const WorkoutForm = () => {
                           </div>
 
                           {/* Exercise parameters */}
-                          <div className="flex-shrink-0 bg-midnight-green px-4 py-2 rounded-lg flex gap-3 items-center">
-                            <span className="text-sm px-2 py-1 bg-gray-700 rounded-full">
+                          <div className=" bg-midnight-green px-4 h-[5.9rem] rounded-lg flex gap-3 items-center ">
+                            <span className="text-sm px-2 py-2 bg-midnight-green-darker rounded-full text-goldenrod">
                               {exerciseItem.sets} sets
                             </span>
-                            <span className="text-sm px-2 py-1 bg-gray-700 rounded-full">
+                            <span className="text-sm px-2 py-2 bg-midnight-green-darker  rounded-full text-goldenrod">
                               {exerciseItem.reps} reps
                             </span>
-                            <span className="text-sm px-2 py-1 bg-gray-700 rounded-full">
+                            <span className="text-sm px-2 py-2 bg-midnight-green-darker  rounded-full text-goldenrod">
                               {exerciseItem.restTimeSeconds}s rest
                             </span>
                           </div>
@@ -692,8 +694,8 @@ const WorkoutForm = () => {
                               disabled={index === 0}
                               className={`p-2 rounded-md ${
                                 index === 0
-                                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                                  : "bg-gray-800 text-white hover:bg-gray-900"
+                                  ? "bg-gray-600 text-gray cursor-not-allowed"
+                                  : "bg-midnight-green text-gray hover:bg-midnight-green-darker"
                               }`}
                               aria-label="Move exercise up"
                             >
@@ -718,8 +720,8 @@ const WorkoutForm = () => {
                               disabled={index === workoutExercises.length - 1}
                               className={`p-2 rounded-md ${
                                 index === workoutExercises.length - 1
-                                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                                  : "bg-gray-800 text-white hover:bg-gray-900"
+                                  ? "bg-gray-600 text-gray cursor-not-allowed"
+                                  : "bg-midnight-green text-gray hover:bg-midnight-green-darker"
                               }`}
                               aria-label="Move exercise down"
                             >
@@ -736,7 +738,7 @@ const WorkoutForm = () => {
                                   );
                                 setWorkoutExercises(updatedExercises);
                               }}
-                              className="p-2 rounded-md bg-sepia hover:bg-dark-sepia text-white"
+                              className="p-2 rounded-md bg-red-900 hover:bg-red-950 text-gray"
                               aria-label="Remove exercise"
                             >
                               ✕
@@ -749,16 +751,11 @@ const WorkoutForm = () => {
                 </div>
               ) : (
                 <div
-                  className={`bg-gray-700 rounded-lg p-6 text-center ${
+                  className={`bg-midnight-green-darker rounded-lg p-6 text-center ${
                     isAddingExercise ? "mb-4" : ""
                   }`}
                 >
                   <p className="text-gray">No exercises added yet.</p>
-                  {!isAddingExercise && (
-                    <p className="text-sm mt-2">
-                      Click "Add Exercise" to start building your workout.
-                    </p>
-                  )}
                 </div>
               )}
 
@@ -768,7 +765,7 @@ const WorkoutForm = () => {
             <div className="flex items-center gap-5 justify-center mt-8">
               <SecondaryButton
                 onClick={handleCancel}
-                styles="p-4 border-b-6 border-r-6 text-body"
+                styles="p-6 border-b-6 border-r-6 text-xl"
               >
                 Cancel
               </SecondaryButton>
@@ -776,8 +773,8 @@ const WorkoutForm = () => {
               <FormButton
                 type="submit"
                 isLoading={submitLoading}
-                styles="p-4 border-b-6 border-r-6 "
-                fontsize="text-body"
+                styles="p-6 border-b-6 border-r-6 "
+                fontsize="text-xl"
               >
                 {isEditMode ? "Update Workout" : "Create Workout"}
               </FormButton>

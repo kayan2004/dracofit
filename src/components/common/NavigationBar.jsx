@@ -1,15 +1,26 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
+import dragon from "/dragons/adult/happy/01.png";
+import {
+  FaRobot,
+  FaDumbbell,
+  // FaClipboardList, // Can remove if no longer used
+  FaUserFriends,
+  FaHome,
+} from "react-icons/fa";
+import { IoFitness } from "react-icons/io5"; // Import IoFitness
 
 // Icons for navigation tabs
-const HomeIcon = ({ active }) => (
+const HomeIcon = (
+  { active } // Keeping SVG for now, can be changed to FaHome
+) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     className="h-6 w-6"
     fill="none"
     viewBox="0 0 24 24"
-    stroke={active ? "currentColor" : "#9CA3AF"}
+    stroke={active ? "currentColor" : "#9CA3AF"} // current color for active will be text-goldenrod from Link
     strokeWidth={2}
   >
     <path
@@ -21,73 +32,34 @@ const HomeIcon = ({ active }) => (
 );
 
 const ExercisesIcon = ({ active }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-6 w-6"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke={active ? "currentColor" : "#9CA3AF"}
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-    />
-  </svg>
+  <IoFitness // Changed from FaClipboardList
+    className={`h-6 w-6 ${active ? "text-red-600" : "text-gray-400"}`}
+  />
 );
 
 const WorkoutsIcon = ({ active }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-6 w-6"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke={active ? "currentColor" : "#9CA3AF"}
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-    />
-  </svg>
+  <FaDumbbell
+    className={`h-6 w-6 ${
+      active ? "text-dark-slate-gray brightness-150" : "text-gray-400"
+    }`}
+  />
 );
 
 const FriendsIcon = ({ active }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-6 w-6"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke={active ? "currentColor" : "#9CA3AF"}
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-    />
-  </svg>
+  <FaUserFriends
+    className={`h-6 w-6 ${active ? "text-blue-400" : "text-gray-400"}`}
+  />
 );
 
 const ChatbotIcon = ({ active }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-6 w-6"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke={active ? "currentColor" : "#9CA3AF"}
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-    />
-  </svg>
+  <FaRobot
+    className={`h-6 w-6 ${active ? "text-medium-aquamarine" : "text-gray-400"}`}
+  />
 );
 
+const DragonHomeIcon = ({ active }) => (
+  <img src={dragon} alt="Home" className="h-8 w-8" /> // Using the imported dragon image
+);
 /**
  * Navigation Bar component with 5 tabs
  * Only two tabs (Home and Exercises) are currently functional
@@ -99,39 +71,39 @@ const NavigationBar = ({ className = "" }) => {
   // Define navigation items
   const navItems = [
     {
-      name: "Home",
-      path: "/", // Assuming '/' is home
-      icon: HomeIcon,
-      active: location.pathname === "/" || location.pathname === "/home",
+      name: "Workouts",
+      path: "/workouts",
+      icon: WorkoutsIcon, // Updated
+      active: location.pathname.includes("/workouts"),
       enabled: true,
     },
     {
       name: "Exercises",
       path: "/exercises",
-      icon: ExercisesIcon,
+      icon: ExercisesIcon, // Updated
       active: location.pathname.includes("/exercises"),
       enabled: true,
     },
     {
-      name: "Workouts",
-      path: "/workouts",
-      icon: WorkoutsIcon,
-      active: location.pathname.includes("/workouts"),
-      enabled: true, // Not yet functional
+      name: "Home",
+      path: "/",
+      icon: DragonHomeIcon, // Keeping custom dragon icon for Home
+      active: location.pathname === "/" || location.pathname === "/home",
+      enabled: true,
     },
     {
       name: "Friends",
       path: "/feed",
-      icon: FriendsIcon,
+      icon: FriendsIcon, // Updated
       active: location.pathname.includes("/feed"),
-      enabled: true, // Not yet functional
+      enabled: true,
     },
     {
       name: "Chatbot",
       path: "/chatbot",
       icon: ChatbotIcon,
       active: location.pathname.includes("/chatbot"),
-      enabled: true, // Change from false to true
+      enabled: true,
     },
   ];
 
@@ -152,18 +124,27 @@ const NavigationBar = ({ className = "" }) => {
       <div className="max-w-screen-xl mx-auto">
         <ul className="flex justify-around items-center">
           {navItems.map((item) => (
-            <li key={item.name} className="relative">
+            <li
+              key={item.name}
+              className={`relative ${item.name === "Home" ? "pb-2" : ""}`} // Special padding for Home icon if needed
+            >
               <Link
                 to={item.path}
                 className={`flex flex-col items-center py-2 rounded-lg transition-colors ${
                   item.active
-                    ? "text-goldenrod"
+                    ? "text-goldenrod" // Active color for the whole Link (icon + text)
                     : "text-gray-400 hover:text-goldenrod/80"
                 }`}
               >
+                {/* The icon component itself handles its internal active color based on the prop */}
                 <item.icon active={item.active} />
                 <span className="text-xs mt-1">{item.name}</span>
               </Link>
+              {showTooltip === item.name && (
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-700 text-white text-xs rounded shadow-lg whitespace-nowrap">
+                  Coming Soon!
+                </div>
+              )}
             </li>
           ))}
         </ul>

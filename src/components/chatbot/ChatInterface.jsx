@@ -2,18 +2,20 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
-import chatbotApi from "../../services/ChatbotService"; // Corrected import path
+import chatbotApi from "../../services/ChatbotService";
 import interactionApi from "../../services/interactionApi";
+import userDetailsService from "../../services/userDetailsService"; // Import userDetailsService
 import { useAuth } from "../../hooks/useAuth";
+import { FaSpinner } from "react-icons/fa"; // Import FaSpinner for loading indicators
 
 const ChatInterface = () => {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, currentUser, loading: authLoading } = useAuth(); // Get currentUser
   const [messages, setMessages] = useState([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(authLoading);
   const [historyError, setHistoryError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // For bot response loading
   const [modelStatus, setModelStatus] = useState({
-    status: "unknown", // Start as unknown
+    status: "unknown",
     lastChecked: null,
     details: null,
     error: null,
@@ -23,15 +25,51 @@ const ChatInterface = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // --- State to hold a message waiting to be sent ---
   const [pendingPrefillMessage, setPendingPrefillMessage] = useState(null);
 
-  // --- Scroll to bottom effect ---
+  // --- State for user's profile picture ---
+  const [userProfilePicUrl, setUserProfilePicUrl] = useState(null);
+  const [profilePicLoading, setProfilePicLoading] = useState(false); // Initialize to false, set true when fetching
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // --- Fetch chat history effect (remains the same) ---
+  // --- Fetch User Profile Picture ---
+  useEffect(() => {
+    const fetchUserProfilePic = async () => {
+      if (isAuthenticated && currentUser && currentUser.id) {
+        setProfilePicLoading(true); // Set loading true before fetch
+        try {
+          const details = await userDetailsService.getUserDetails();
+          if (details && details.profilePictureUrl) {
+            setUserProfilePicUrl(details.profilePictureUrl);
+          } else {
+            setUserProfilePicUrl(null); // Explicitly set to null if not found
+          }
+        } catch (error) {
+          console.error(
+            "ChatInterface: Failed to fetch user details for profile pic:",
+            error
+          );
+          setUserProfilePicUrl(null); // Ensure it's null on error
+        } finally {
+          setProfilePicLoading(false); // Set loading false after fetch
+        }
+      } else if (!authLoading) {
+        // If not authenticated and auth is done
+        setUserProfilePicUrl(null); // Clear if not authenticated
+        setProfilePicLoading(false); // Ensure loading is false
+      }
+    };
+
+    if (!authLoading) {
+      // Only attempt to fetch if auth loading is complete
+      fetchUserProfilePic();
+    }
+  }, [isAuthenticated, currentUser, authLoading]); // Add authLoading as dependency
+
+  // --- Fetch chat history effect ---
   useEffect(() => {
     const fetchHistory = async () => {
       if (authLoading) {
@@ -58,8 +96,6 @@ const ChatInterface = () => {
                   timestamp: new Date(interaction.timestamp),
                   isLoading: false,
                   isError: false,
-                  // Remove type if not needed elsewhere
-                  // type: 'text',
                 },
                 {
                   id: `db-a-${interaction.id || index}`,
@@ -68,8 +104,6 @@ const ChatInterface = () => {
                   timestamp: new Date(interaction.timestamp),
                   isLoading: false,
                   isError: false,
-                  // Remove type if not needed elsewhere
-                  // type: 'text',
                 },
               ]
             );
@@ -86,8 +120,11 @@ const ChatInterface = () => {
           setIsHistoryLoading(false);
         }
       } else if (isAuthenticated && messages.length > 0) {
+        // If history is already loaded (messages.length > 0), no need to set loading false again
+        // unless it was true for some other reason.
         setIsHistoryLoading(false);
-      } else {
+      } else if (!isAuthenticated && !authLoading) {
+        // Ensure history loading stops if not authenticated
         setMessages([]);
         setHistoryError(null);
         setIsHistoryLoading(false);
@@ -95,9 +132,9 @@ const ChatInterface = () => {
     };
 
     fetchHistory();
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading]); // messages.length removed as dependency to prevent re-fetch on new message
 
-  // --- Health Check Effect (remains the same) ---
+  // --- Health Check Effect ---
   useEffect(() => {
     const checkStatus = async () => {
       try {
@@ -128,24 +165,21 @@ const ChatInterface = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // --- handleSendMessage (remains the same) ---
+  // --- handleSendMessage ---
   const handleSendMessage = useCallback(
     async (text) => {
-      // The existing guard clause handles the online check here
       if (!text?.trim() || loading || modelStatus.status !== "online") {
         console.warn("[handleSendMessage] Skipping send. Reason:", {
           textExists: !!text?.trim(),
           loading,
           status: modelStatus.status,
         });
-        // Optionally clear pending message if status is bad? Or let it wait? For now, just skip.
         return;
       }
 
       setLoading(true);
       setApiError(null);
 
-      // --- Always add user message ---
       const newUserMessage = {
         id: `user-${Date.now()}`,
         text,
@@ -153,8 +187,6 @@ const ChatInterface = () => {
         timestamp: new Date(),
         isLoading: false,
         isError: false,
-        // Remove type if not needed elsewhere
-        // type: 'text',
       };
       setMessages((prevMessages) => [...prevMessages, newUserMessage]);
 
@@ -168,8 +200,6 @@ const ChatInterface = () => {
           timestamp: new Date(),
           isLoading: true,
           isError: false,
-          // Remove type if not needed elsewhere
-          // type: 'text',
         },
       ]);
 
@@ -205,26 +235,16 @@ const ChatInterface = () => {
         while (true) {
           const { value, done } = await reader.read();
           if (done) {
-            console.log(
-              "[Streaming] Stream finished (done=true). Final received text:",
-              receivedText
-            );
             finalBotResponse = receivedText;
-            // --- Log before final setMessages ---
-            console.log(
-              "[Streaming] Setting final message state (isLoading: false)"
-            );
             setMessages((prevMessages) => {
               const updated = prevMessages.map((msg) =>
                 msg.id === botMessageId
                   ? { ...msg, text: finalBotResponse, isLoading: false }
                   : msg
               );
-              // --- Log the state that WILL be set ---
-              console.log("[Streaming] State after final update:", updated);
               return updated;
             });
-            break; // Exit loop
+            break;
           }
 
           buffer += value;
@@ -241,70 +261,62 @@ const ChatInterface = () => {
                 if (parsedData.status === "streaming" && parsedData.chunk) {
                   const chunk = parsedData.chunk;
                   receivedText += chunk;
-                  // --- Log chunk received and text update ---
-                  console.log(
-                    `[Streaming] Chunk received: "${chunk}". New receivedText: "${receivedText}"`
-                  );
-                  // --- Log right before the streaming setMessages call ---
-                  console.log(
-                    "[Streaming] Calling setMessages for streaming update (isLoading: true)"
-                  );
                   setMessages((prevMessages) => {
-                    // --- Log the previous state inside the updater ---
-                    // console.log("[Streaming] prevMessages inside updater:", prevMessages);
                     const updatedMessages = prevMessages.map((msg) =>
                       msg.id === botMessageId
-                        ? { ...msg, text: receivedText, isLoading: true } // Ensure isLoading stays true
+                        ? { ...msg, text: receivedText, isLoading: true }
                         : msg
-                    );
-                    // --- Log the state that WILL be set ---
-                    console.log(
-                      "[Streaming] State after streaming update:",
-                      updatedMessages
                     );
                     return updatedMessages;
                   });
-                  // --- Log immediately after the setMessages call ---
-                  console.log(
-                    "[Streaming] setMessages for streaming update called."
-                  );
                 } else if (parsedData.status === "success") {
-                  console.log(
-                    "[Streaming] Received 'success' status. Full response:",
-                    parsedData.full_response
-                  );
                   finalBotResponse = parsedData.full_response || receivedText;
-                  // --- Log before success setMessages ---
-                  console.log(
-                    "[Streaming] Setting success message state (isLoading: false)"
-                  );
                   setMessages((prevMessages) => {
                     const updated = prevMessages.map((msg) =>
                       msg.id === botMessageId
                         ? { ...msg, text: finalBotResponse, isLoading: false }
                         : msg
                     );
-                    // --- Log the state that WILL be set ---
-                    console.log(
-                      "[Streaming] State after success update:",
-                      updated
-                    );
                     return updated;
                   });
+                } else if (
+                  parsedData.status === "error" ||
+                  parsedData.status === "aborted"
+                ) {
+                  console.error("Stream error/aborted by server:", parsedData);
+                  finalBotResponse =
+                    receivedText +
+                    (parsedData.error
+                      ? ` [Error: ${parsedData.error}]`
+                      : " [Stream aborted]");
+                  setMessages((prevMessages) =>
+                    prevMessages.map((msg) =>
+                      msg.id === botMessageId
+                        ? {
+                            ...msg,
+                            text: finalBotResponse,
+                            isLoading: false,
+                            isError: true,
+                          }
+                        : msg
+                    )
+                  );
                 }
-                // ... error/aborted handling ...
               } catch (e) {
-                /* ... */
+                console.warn(
+                  "Error parsing stream data JSON:",
+                  e,
+                  "Data:",
+                  jsonData
+                );
               }
             }
             boundary = buffer.indexOf("\n\n");
           }
-        } // end while reader
+        }
 
-        // --- Save interaction (reverted question logic) ---
         if (finalBotResponse && isAuthenticated) {
           try {
-            // --- Use the original text directly ---
             await interactionApi.saveInteraction(text, finalBotResponse);
           } catch (saveError) {
             console.warn("Could not save interaction:", saveError);
@@ -335,44 +347,77 @@ const ChatInterface = () => {
         );
       }
     },
-    [loading, modelStatus.status, isAuthenticated, interactionApi] // Ensure modelStatus.status is a dependency
+    [loading, modelStatus.status, isAuthenticated, interactionApi]
   );
 
   // --- Effect to CAPTURE incoming message from navigation state ---
   useEffect(() => {
     if (location.state?.prefillMessage) {
       const messageToSet = location.state.prefillMessage;
-      console.log(
-        "[ChatInterface] Received prefill message, setting as pending:",
-        messageToSet
-      );
-      setPendingPrefillMessage(messageToSet); // Store the message
-      // Clear the location state immediately
+      setPendingPrefillMessage(messageToSet);
       navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state, navigate]); // Only depends on location state and navigate
+  }, [location.state, navigate]);
 
   // --- Effect to SEND pending message WHEN model is online ---
   useEffect(() => {
-    // Check if there's a pending message AND the model is online
-    if (pendingPrefillMessage && modelStatus.status === "online") {
+    if (
+      pendingPrefillMessage &&
+      modelStatus.status === "online" &&
+      !authLoading &&
+      !isHistoryLoading &&
+      !profilePicLoading
+    ) {
       console.log(
-        "[ChatInterface] Model online and message pending. Sending:",
+        "[ChatInterface] Model online, auth/history/profile loaded, and message pending. Sending:",
         pendingPrefillMessage
       );
       handleSendMessage(pendingPrefillMessage);
-      setPendingPrefillMessage(null); // Clear the pending message after attempting to send
+      setPendingPrefillMessage(null);
     } else if (pendingPrefillMessage && modelStatus.status !== "unknown") {
-      // Optional: Log if message is pending but model is not online (and not just 'unknown')
       console.warn(
-        `[ChatInterface] Message pending ("${pendingPrefillMessage}") but model status is ${modelStatus.status}. Waiting...`
+        `[ChatInterface] Message pending ("${pendingPrefillMessage}") but model status is ${modelStatus.status} or still loading. Waiting...`
       );
     }
-  }, [pendingPrefillMessage, modelStatus.status, handleSendMessage]); // Depends on the pending message and model status
+  }, [
+    pendingPrefillMessage,
+    modelStatus.status,
+    handleSendMessage,
+    authLoading,
+    isHistoryLoading,
+    profilePicLoading,
+  ]);
 
   const getStatusBadge = () => {
-    /* ... */
+    let bgColor = "bg-gray-500";
+    let textColor = "text-white";
+    let text = modelStatus.status.toUpperCase();
+
+    if (modelStatus.status === "online") {
+      bgColor = "bg-green-500";
+    } else if (modelStatus.status === "offline") {
+      bgColor = "bg-yellow-500";
+      textColor = "text-black";
+    } else if (modelStatus.status === "error") {
+      bgColor = "bg-red-500";
+    } else if (modelStatus.status === "unknown") {
+      text = "CHECKING...";
+    }
+
+    return (
+      <span
+        className={`px-3 py-1 text-xs font-semibold rounded-full ${bgColor} ${textColor}`}
+      >
+        {text}
+      </span>
+    );
   };
+
+  // Combined initial loading state
+  const initialScreenLoading =
+    authLoading ||
+    profilePicLoading ||
+    (isAuthenticated && isHistoryLoading && messages.length === 0);
 
   return (
     <div className="flex flex-col h-[100%] bg-dark-slate-gray">
@@ -381,17 +426,31 @@ const ChatInterface = () => {
         {getStatusBadge()}
       </div>
       <div className="flex-1 overflow-y-auto pb-4 px-4 space-y-4">
-        {isHistoryLoading && messages.length === 0 && (
-          <div className="text-center text-gray-400 p-4">
-            Loading history...
+        {initialScreenLoading && (
+          <div className="text-center text-gray-400 p-4 flex flex-col items-center justify-center h-full">
+            <FaSpinner className="animate-spin text-2xl mb-2 text-goldenrod" />
+            {authLoading && <p>Authenticating...</p>}
+            {profilePicLoading && !authLoading && (
+              <p>Loading user profile...</p>
+            )}
+            {isHistoryLoading &&
+              !authLoading &&
+              !profilePicLoading &&
+              messages.length === 0 &&
+              isAuthenticated && <p>Loading chat history...</p>}
           </div>
         )}
-        {historyError && messages.length === 0 && (
+        {!initialScreenLoading && historyError && messages.length === 0 && (
           <div className="text-center text-red-400 p-4">{historyError}</div>
         )}
-        {messages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
-        ))}
+        {!initialScreenLoading &&
+          messages.map((message) => (
+            <ChatMessage
+              key={message.id}
+              message={message}
+              userProfilePicUrl={userProfilePicUrl} // Pass the URL
+            />
+          ))}
         <div ref={messagesEndRef} />
       </div>
       {apiError && (
@@ -402,11 +461,10 @@ const ChatInterface = () => {
       <div className="p-4 border-t border-gray-700">
         <ChatInput
           onSendMessage={handleSendMessage}
-          isLoading={loading}
+          isLoading={loading} // Bot response loading
           isDisabled={
-            authLoading ||
-            modelStatus.status !== "online" ||
-            (isHistoryLoading && messages.length === 0)
+            initialScreenLoading || // Disable if any initial loading is true
+            modelStatus.status !== "online"
           }
         />
       </div>

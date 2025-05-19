@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import {
-  // FaRunning, // Icons removed in previous step, ensure they are not needed
-  // FaTrophy,
   FaUserPlus,
   FaRegNewspaper,
   FaSpinner,
   FaExclamationTriangle,
-  FaUserCircle,
+  // FaUserCircle, // Not explicitly used in the JSX, can be removed if not needed elsewhere
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -15,52 +13,39 @@ import FeedItem from "../components/friends/FeedItem";
 // --- Mock Data ---
 // Pass current userId to distinguish 'self' posts
 const fetchMockFeed = async (currentUserId) => {
-  console.log("[fetchMockFeed] Fetching mock feed for user:", currentUserId); // Log start
+  console.log("[fetchMockFeed] Fetching mock feed for user:", currentUserId);
   await new Promise((resolve) => setTimeout(resolve, 800));
-  console.log("[fetchMockFeed] Mock delay finished."); // Log after delay
+  console.log("[fetchMockFeed] Mock delay finished.");
 
-  // Example: Assume currentUserId is 62 for this mock data
-  const selfUserId = currentUserId || 62;
+  // Example: Assume currentUserId is 'currentUser123' for this mock data if not provided
+  const selfUserId = currentUserId || "currentUser123"; // Use a placeholder if currentUser.id is not available yet
 
   const mockData = [
-    // --- Friend's Posts (Left Aligned) ---
     {
-      id: "feed1",
-      timestamp: new Date(Date.now() - 3600 * 1000).toISOString(),
+      id: "feed_fadi_workout",
+      timestamp: new Date(Date.now() - 1 * 3600 * 1000).toISOString(), // 1 hour ago
       friend: {
-        id: 61,
-        username: "kayan",
-        profilePictureUrl: `http://localhost:3000/api/users/61/avatar`,
+        id: "fadiUser123", // A unique ID for Fadi
+        username: "Fadi",
+        profilePictureUrl: `https://ui-avatars.com/api/?name=Fadi&background=0D8ABC&color=fff`, // Placeholder avatar
       },
       actionType: "WORKOUT_COMPLETED",
-      details: { workoutName: "Morning Run", duration: "30 mins" },
+      details: { workoutName: "Push", duration: "30 mins" },
     },
     {
-      id: "feed3",
-      timestamp: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
+      id: "feed_you_workout",
+      timestamp: new Date(Date.now() - 3 * 3600 * 1000).toISOString(), // 3 hours ago
       friend: {
-        id: 61,
-        username: "kayan",
-        profilePictureUrl: `http://localhost:3000/api/users/61/avatar`,
+        id: selfUserId,
+        username: "You", // Username will be replaced by FeedItem if it's the current user
+        profilePictureUrl: `http://localhost:3000/api/users/${selfUserId}/avatar`,
       },
-      actionType: "NEW_FRIEND",
-      details: { newFriendUsername: "testuser" },
+      actionType: "WORKOUT_COMPLETED",
+      details: { workoutName: "Pull" }, // Duration can be optional
     },
     {
-      id: "feed5",
-      timestamp: new Date(Date.now() - 48 * 3600 * 1000).toISOString(),
-      friend: {
-        id: 63,
-        username: "NoPicUser",
-        profilePictureUrl: null,
-      },
-      actionType: "LEVEL_UP",
-      details: { level: 2 },
-    },
-    // --- Current User's Posts (Right Aligned) ---
-    {
-      id: "feed2",
-      timestamp: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+      id: "feed_you_levelup",
+      timestamp: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), // 5 hours ago
       friend: {
         id: selfUserId,
         username: "You",
@@ -70,29 +55,29 @@ const fetchMockFeed = async (currentUserId) => {
       details: { level: 5 },
     },
     {
-      id: "feed4",
-      timestamp: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+      id: "feed_you_evolution",
+      timestamp: new Date(Date.now() - 24 * 3600 * 1000).toISOString(), // 1 day ago
       friend: {
         id: selfUserId,
         username: "You",
         profilePictureUrl: `http://localhost:3000/api/users/${selfUserId}/avatar`,
       },
-      actionType: "WORKOUT_COMPLETED",
-      details: { workoutName: "Leg Day Annihilation" },
+      actionType: "PET_EVOLVED", // Assuming a new actionType or re-using an existing one
+      details: { newStage: "teen" },
     },
     {
-      id: "feed6",
-      timestamp: new Date(Date.now() - 72 * 3600 * 1000).toISOString(),
+      id: "feed_sam_streak", // Changed ID
+      timestamp: new Date(Date.now() - 48 * 3600 * 1000).toISOString(), // 2 days ago
       friend: {
-        id: selfUserId,
-        username: "You",
-        profilePictureUrl: `http://localhost:3000/api/users/${selfUserId}/avatar`,
+        id: "samUser789", // A unique ID for Sam
+        username: "Sam", // Changed username
+        profilePictureUrl: `https://ui-avatars.com/api/?name=Sam&background=28A745&color=fff`, // Placeholder avatar for Sam
       },
-      actionType: "NEW_FRIEND",
-      details: { newFriendUsername: "kayan" },
+      actionType: "STREAK_ACHIEVED", // Changed actionType
+      details: { streakCount: 10 }, // Changed details
     },
-  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  console.log("[fetchMockFeed] Returning mock data."); // Log before return
+  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Keep sorting
+  console.log("[fetchMockFeed] Returning updated mock data.");
   return mockData;
 };
 // --- End Mock Data ---
@@ -100,10 +85,9 @@ const fetchMockFeed = async (currentUserId) => {
 const FriendFeed = () => {
   const { currentUser, isAuthenticated, loading: authLoading } = useAuth();
   const [feedItems, setFeedItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // Start loading true
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Log initial state and props
   console.log("[FriendFeed Render] Initial State:", {
     isLoading,
     error,
@@ -116,7 +100,6 @@ const FriendFeed = () => {
   });
 
   useEffect(() => {
-    // Log when the effect runs and the state values at that time
     console.log("[FriendFeed useEffect] Running effect. Deps:", {
       authLoading,
       isAuthenticated,
@@ -125,16 +108,16 @@ const FriendFeed = () => {
 
     const loadFeed = async () => {
       console.log("[FriendFeed loadFeed] Checking auth state...");
-      // Check if auth is finished AND user is logged in
       if (!authLoading && isAuthenticated && currentUser) {
         console.log("[FriendFeed loadFeed] Auth OK. Setting loading true.");
-        // Ensure loading is true before fetching
-        // Note: It might already be true from initial state, this ensures it if the effect re-runs
         setIsLoading(true);
         setError(null);
         try {
-          console.log("[FriendFeed loadFeed] Calling fetchMockFeed...");
-          const data = await fetchMockFeed(currentUser.id);
+          console.log(
+            "[FriendFeed loadFeed] Calling fetchMockFeed with user ID:",
+            currentUser.id
+          );
+          const data = await fetchMockFeed(currentUser.id); // Pass currentUser.id
           console.log(
             "[FriendFeed loadFeed] fetchMockFeed returned, setting feed items."
           );
@@ -144,32 +127,25 @@ const FriendFeed = () => {
           setError(err.message || "Failed to load feed.");
         } finally {
           console.log("[FriendFeed loadFeed] Setting loading false.");
-          setIsLoading(false); // Set loading false after fetch attempt (success or fail)
+          setIsLoading(false);
         }
       } else if (!authLoading && !isAuthenticated) {
-        // If auth is finished but user is not logged in
         console.log(
           "[FriendFeed loadFeed] Not authenticated. Clearing state and setting loading false."
         );
         setFeedItems([]);
-        setError(null); // Clear any previous errors
-        setIsLoading(false); // Ensure loading is false
+        setError(null);
+        setIsLoading(false);
       } else {
-        // If auth is still loading
         console.log(
           "[FriendFeed loadFeed] Auth still loading or currentUser missing. Waiting..."
         );
-        // Don't set isLoading to false here, wait for auth state to resolve
       }
     };
 
     loadFeed();
-    // Dependency array: re-run effect if auth state changes
   }, [authLoading, isAuthenticated, currentUser]);
 
-  // --- Render Logic ---
-
-  // 1. Show loading spinner if authentication is in progress
   if (authLoading) {
     console.log("[FriendFeed Render] Rendering Auth Loading state.");
     return (
@@ -179,7 +155,6 @@ const FriendFeed = () => {
     );
   }
 
-  // 2. Show login message if authentication is done but user is not logged in
   if (!isAuthenticated) {
     console.log("[FriendFeed Render] Rendering Not Authenticated state.");
     return (
@@ -189,7 +164,6 @@ const FriendFeed = () => {
     );
   }
 
-  // 3. If authenticated, render the main feed page content
   console.log("[FriendFeed Render] Rendering main feed content area.");
   return (
     <div className="p-4 md:p-6 pt-4 md:pt-6 bg-dark-slate-gray min-h-screen text-gray">

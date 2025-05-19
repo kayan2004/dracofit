@@ -71,6 +71,38 @@ const getActionText = (item, isCurrentUser) => {
           </>
         );
       }
+    case "PET_EVOLVED":
+      if (isCurrentUser) {
+        return (
+          <>
+            My dragon evolved to the{" "}
+            <span className="font-semibold">
+              {item.details?.newStage || "next"}
+            </span>{" "}
+            stage! 🐉
+          </>
+        );
+      } else {
+        return (
+          <>
+            {actorName}'s dragon evolved to the{" "}
+            <span className="font-semibold">
+              {item.details?.newStage || "next"}
+            </span>{" "}
+            stage! 🐉
+          </>
+        );
+      }
+    case "STREAK_ACHIEVED":
+      return (
+        <>
+          {actorName} reached a{" "}
+          <span className="font-semibold">
+            {item.details?.streakCount || "new"} day streak
+          </span>
+          ! 🔥
+        </>
+      );
     default:
       // Adjust default message for "I"
       return isCurrentUser

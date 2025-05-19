@@ -3,8 +3,24 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import workoutsService from "../../services/workoutsService";
 import workoutExercisesService from "../../services/workoutExercisesService";
-import FormButton from "../common/FormButton";
-import SecondaryButton from "../common/SecondaryButton";
+import ExerciseCard from "../exercises/ExerciseCard"; // Correctly importing ExerciseCard
+
+// A simple pencil icon component (or you can use a library like react-icons)
+const EditIcon = ({ className = "" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    className={`w-5 h-5 ${className}`}
+  >
+    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+    <path
+      fillRule="evenodd"
+      d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
 
 /**
  * Component to display full details of a workout plan
@@ -149,6 +165,20 @@ const WorkoutDetails = ({ workoutId }) => {
     }
   };
 
+  // Helper function to get primary muscle (similar to Exercises.jsx)
+  const getPrimaryMuscleForWorkoutExercise = (exercise) => {
+    if (!exercise) return null;
+    if (exercise.primaryMuscleGroup) return exercise.primaryMuscleGroup;
+    if (
+      exercise.targetMuscles &&
+      Array.isArray(exercise.targetMuscles) &&
+      exercise.targetMuscles.length > 0
+    ) {
+      return exercise.targetMuscles[0]; // Or join them: exercise.targetMuscles.join(', ')
+    }
+    return null; // Or a default like "N/A"
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-midnight-green p-6 flex flex-col items-center justify-center text-white">
@@ -212,7 +242,20 @@ const WorkoutDetails = ({ workoutId }) => {
         {/* Header section */}
         <div className="mb-8">
           <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
-            <h1 className="text-4xl text-goldenrod">{workout.name}</h1>
+            <div className="flex items-center gap-3">
+              {" "}
+              {/* Wrapper for title and edit icon */}
+              <h1 className="text-4xl text-goldenrod">{workout.name}</h1>
+              {isAuthenticated && workout.userId === user?.id && (
+                <button
+                  onClick={() => navigate(`/workouts/edit/${workout.id}`)}
+                  title="Edit Workout"
+                  className="text-goldenrod hover:text-yellow-500 transition-colors p-1 rounded-full hover:bg-gray-700" // Added some padding and hover effect
+                >
+                  <EditIcon className="w-6 h-6" />
+                </button>
+              )}
+            </div>
             <span
               className={`px-3 py-1 rounded-full text-sm ${getTypeStyle(
                 workout.type
@@ -226,24 +269,26 @@ const WorkoutDetails = ({ workoutId }) => {
             <p className="text-gray mb-6">{workout.description}</p>
           )}
 
-          {/* Workout metadata */}
+          {/* Workout metadata - Icons are already present here */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
             <div className="bg-midnight-green rounded-lg p-4 flex flex-col items-center justify-center">
               <span className="text-4xl mb-2">
-                {getWorkoutTypeEmoji(workout.type)}
+                {getWorkoutTypeEmoji(workout.type)} {/* Icon for Type */}
               </span>
               <h3 className="text-lg text-goldenrod font-medium">Type</h3>
               <p className="text-gray">{workout.type || "General"}</p>
             </div>
             <div className="bg-midnight-green rounded-lg p-4 flex flex-col items-center justify-center">
-              <span className="text-4xl mb-2">⏱️</span>
+              <span className="text-4xl mb-2">⏱️</span>{" "}
+              {/* Icon for Duration */}
               <h3 className="text-lg text-goldenrod font-medium">Duration</h3>
               <p className="text-gray">
                 {formatDuration(workout.durationMinutes)}
               </p>
             </div>
             <div className="bg-midnight-green rounded-lg p-4 flex flex-col items-center justify-center">
-              <span className="text-4xl mb-2">🏋️</span>
+              <span className="text-4xl mb-2">🏋️</span>{" "}
+              {/* Icon for Exercises count */}
               <h3 className="text-lg text-goldenrod font-medium">Exercises</h3>
               <p className="text-gray">
                 {exercises ? exercises.length : 0} exercises
@@ -254,109 +299,75 @@ const WorkoutDetails = ({ workoutId }) => {
 
         {/* Exercises section */}
         <div className="mb-8">
-          <h2 className="text-2xl text-goldenrod mb-6">Workout Routine</h2>
+          {/* Changed title from "Workout Routine" to "Exercises" */}
+          <h2 className="text-2xl text-goldenrod mb-6">Exercises</h2>
 
           {exercises.length > 0 ? (
-            <div className="space-y-6">
-              {exercises.map((exerciseItem, index) => (
-                <div
-                  key={exerciseItem.id}
-                  className="bg-gray-800 rounded-lg overflow-hidden"
-                >
-                  {/* Exercise header with order number */}
-                  <div className="bg-gray-700 px-4 py-2 flex justify-between items-center">
-                    <div className="flex items-center">
-                      <span className="bg-goldenrod text-midnight-green w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3">
-                        {index + 1}
-                      </span>
-                      <h3 className="font-medium text-goldenrod">
-                        {exerciseItem.exercise?.name || "Exercise"}
-                      </h3>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {exercises.map((exerciseItem, index) => {
+                // Normalize the exercise object before passing to ExerciseCard
+                const normalizedExercise = exerciseItem.exercise
+                  ? {
+                      ...exerciseItem.exercise,
+                      primaryMuscleGroup: getPrimaryMuscleForWorkoutExercise(
+                        exerciseItem.exercise
+                      ),
+                      // Ensure other fields expected by ExerciseCard are present or have defaults if necessary
+                      id: exerciseItem.exercise.id || `temp-id-${index}`, // Ensure ID is present
+                      name: exerciseItem.exercise.name || "Unnamed Exercise",
+                    }
+                  : null;
 
-                  {/* Exercise details */}
-                  <div className="p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div className="bg-gray-700 p-3 rounded-lg flex flex-col items-center">
-                        <span className="text-gray text-sm">SETS</span>
-                        <span className="text-xl text-goldenrod">
-                          {exerciseItem.sets}
+                return (
+                  <div
+                    key={exerciseItem.id || `workout-item-${index}`} // Use exerciseItem.id from the workout_exercises table
+                    className="bg-midnight-green-darker rounded-lg overflow-hidden flex flex-col"
+                  >
+                    {/* Exercise header with order number and name (displayed by WorkoutDetails) */}
+                    <div className="bg-midnight-green px-4 py-2 flex justify-between items-center">
+                      <div className="flex items-center">
+                        <span className="bg-goldenrod text-midnight-green w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3">
+                          {index + 1}
                         </span>
-                      </div>
-                      <div className="bg-gray-700 p-3 rounded-lg flex flex-col items-center">
-                        <span className="text-gray text-sm">REPS</span>
-                        <span className="text-xl text-goldenrod">
-                          {exerciseItem.reps}
-                        </span>
-                      </div>
-                      <div className="bg-gray-700 p-3 rounded-lg flex flex-col items-center">
-                        <span className="text-gray text-sm">REST</span>
-                        <span className="text-xl text-goldenrod">
-                          {exerciseItem.restTimeSeconds}s
-                        </span>
+                        <h3 className="font-medium text-goldenrod">
+                          {exerciseItem.exercise?.name || "Exercise"}
+                        </h3>
                       </div>
                     </div>
 
-                    {/* Exercise card itself */}
-                    {exerciseItem.exercise && (
-                      <div className="bg-midnight-green rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex h-24">
-                        {/* Exercise Image - Left side */}
-                        <div className="w-24 h-full bg-midnight-green-darker flex-shrink-0">
-                          {exerciseItem.exercise.videoUrl ? (
-                            <img
-                              src={`https://vumbnail.com/${exerciseItem.exercise.videoUrl}.jpg`}
-                              alt={exerciseItem.exercise.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src =
-                                  "/images/exercise-placeholder.jpg";
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-600">
-                              <span>No image</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Exercise Details - Right side */}
-                        <div className="p-3 flex flex-col justify-between flex-grow">
-                          <div>
-                            {/* Target Muscle */}
-                            {exerciseItem.exercise.targetMuscles &&
-                              exerciseItem.exercise.targetMuscles.length >
-                                0 && (
-                                <p className="text-xs text-gray-400 mt-0.5">
-                                  Targets:{" "}
-                                  {exerciseItem.exercise.targetMuscles[0]}
-                                </p>
-                              )}
-
-                            {/* Equipment */}
-                            {exerciseItem.exercise.equipment && (
-                              <p className="text-xs text-gray-400">
-                                Equipment: {exerciseItem.exercise.equipment}
-                              </p>
-                            )}
+                    <div className="p-4 flex-grow flex flex-col justify-between">
+                      <div>
+                        {/* Sets, Reps, Rest specific to this workout item */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                          <div className="bg-midnight-green p-3 rounded-lg flex flex-col items-center">
+                            <span className="text-gray text-sm">SETS</span>
+                            <span className="text-xl text-goldenrod">
+                              {exerciseItem.sets}
+                            </span>
                           </div>
-
-                          {/* View Exercise Details Link */}
-                          <div className="flex justify-end">
-                            <a
-                              href={`/exercises/${exerciseItem.exercise.id}`}
-                              className="text-xs text-goldenrod hover:text-yellow-500 transition-colors"
-                            >
-                              Exercise Details →
-                            </a>
+                          <div className="bg-midnight-green p-3 rounded-lg flex flex-col items-center">
+                            <span className="text-gray text-sm">REPS</span>
+                            <span className="text-xl text-goldenrod">
+                              {exerciseItem.reps}
+                            </span>
+                          </div>
+                          <div className="bg-midnight-green p-3 rounded-lg flex flex-col items-center">
+                            <span className="text-gray text-sm">REST</span>
+                            <span className="text-xl text-goldenrod">
+                              {exerciseItem.restTimeSeconds}s
+                            </span>
                           </div>
                         </div>
+
+                        {/* Use ExerciseCard with the normalized exercise object */}
+                        {normalizedExercise && (
+                          <ExerciseCard exercise={normalizedExercise} />
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="bg-gray-800 rounded-lg p-6 text-center">
@@ -365,39 +376,6 @@ const WorkoutDetails = ({ workoutId }) => {
               </p>
             </div>
           )}
-        </div>
-
-        {/* Action buttons */}
-        <div className="mt-8 flex flex-wrap gap-4 justify-center">
-          {/* Only show edit button if the user is the owner of the workout */}
-          {isAuthenticated && workout.userId === user?.id && (
-            <SecondaryButton
-              onClick={() => navigate(`/workouts/edit/${workout.id}`)}
-              styles="p-4 border-b-6 border-r-6 "
-            >
-              Edit Workout
-            </SecondaryButton>
-          )}
-
-          {/* Start workout button - for all users */}
-          <FormButton
-            onClick={() => {
-              if (!isAuthenticated) {
-                navigate("/login", {
-                  state: {
-                    from: `/workout-session/${workout.id}`,
-                    message: "Please log in to start a workout",
-                  },
-                });
-                return;
-              }
-              navigate(`/workout-session/${workout.id}`);
-            }}
-            styles="p-4 border-b-6 border-r-6 text-body"
-            fontsize="text-body"
-          >
-            Start Workout
-          </FormButton>
         </div>
       </div>
     </div>

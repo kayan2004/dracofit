@@ -228,10 +228,10 @@ const Exercises = () => {
     (filters.type ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-dark-slate-gray text-white p-6">
+    <div className="min-h-screen bg-dark-slate-gray text-white p-6 mb-6">
       {/* Simple Header */}
       <div className="mb-8">
-        <h1 className="text-heading-2 text-goldenrod">Exercise Library</h1>
+        <h1 className="text-heading-2 text-white">Exercise Library</h1>
         <p className="text-gray mt-2">
           Browse through our collection of exercises
         </p>

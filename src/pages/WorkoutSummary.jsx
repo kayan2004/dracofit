@@ -13,7 +13,10 @@ import {
   FaRegCalendarCheck,
   FaChartLine,
   FaHome,
+  FaImage, // Icon for placeholder
 } from "react-icons/fa";
+
+const defaultExerciseImage = "/images/exercise-placeholder.jpg"; // Define default image path
 
 const WorkoutSummary = () => {
   const { workoutLogId } = useParams();
@@ -28,7 +31,7 @@ const WorkoutSummary = () => {
     const fetchWorkoutData = async () => {
       try {
         setLoading(true);
-        setError(null); // Reset error on new fetch
+        setError(null);
 
         // Fetch the workout log
         console.log(`Fetching workout log with ID: ${workoutLogId}`);
@@ -42,6 +45,7 @@ const WorkoutSummary = () => {
         console.log(
           `Fetching exercise logs for workout log ID: ${workoutLogId}`
         );
+        // Assuming getExerciseLogs populates exercise details including a thumbnail URL
         const exerciseData = await exerciseLogsService.getExerciseLogs(
           workoutLogId
         );
@@ -271,63 +275,110 @@ const WorkoutSummary = () => {
 
           {/* Check if exerciseLogs is an array and has items */}
           {Array.isArray(exerciseLogs) && exerciseLogs.length > 0 ? (
-            exerciseLogs.map((exerciseLog) => (
-              <div
-                key={exerciseLog.id} // Use exerciseLog.id as key
-                className="bg-midnight-green rounded-lg mb-4 overflow-hidden shadow-md"
-              >
-                <div className="bg-dark-slate-gray p-3">
-                  {/* Use optional chaining for safety */}
-                  <h3 className="font-bold">
-                    {exerciseLog.exercise?.name || "Unknown Exercise"}
-                  </h3>
-                </div>
-                <div className="p-4">
-                  {/* Check setsData instead of sets */}
-                  {exerciseLog.setsData && exerciseLog.setsData.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="text-gray-400 border-b border-gray-700">
-                            <th className="pb-2 text-left">Set</th>
-                            <th className="pb-2 text-right">Weight</th>
-                            <th className="pb-2 text-right">Reps</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {/* Iterate over setsData */}
-                          {exerciseLog.setsData.map((set, index) => (
-                            // Use index or set.setNumber for key if set.id doesn't exist
-                            <tr
-                              key={`${exerciseLog.id}-set-${index}`}
-                              className="border-b border-gray-800"
-                            >
-                              {/* Use set.setNumber if available, otherwise index + 1 */}
-                              <td className="py-2 text-left">
-                                {set.setNumber ?? index + 1}
-                              </td>
-                              <td className="py-2 text-right">
-                                {/* Display weight or '-' if undefined/null */}
-                                {set.weight !== undefined && set.weight !== null
-                                  ? `${set.weight} lbs`
-                                  : "-"}
-                              </td>
-                              <td className="py-2 text-right">
-                                {set.reps ?? "-"}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+            exerciseLogs.map((exerciseLog) => {
+              const exerciseDetails = exerciseLog.exercise;
+              let currentThumbnailUrl =
+                exerciseDetails?.imageUrl || defaultExerciseImage;
+
+              if (exerciseDetails?.videoUrl) {
+                let vimeoId = exerciseDetails.videoUrl;
+                if (!/^\d+$/.test(exerciseDetails.videoUrl)) {
+                  const match = exerciseDetails.videoUrl.match(
+                    /(?:vimeo\.com\/(?:manage\/videos\/|video\/|))(\d+)(?:$|\/|\?)/
+                  );
+                  if (match && match[1]) {
+                    vimeoId = match[1];
+                  }
+                }
+                // Only override if vimeoId was successfully extracted and is numeric
+                if (/^\d+$/.test(vimeoId)) {
+                  currentThumbnailUrl = `https://vumbnail.com/${vimeoId}.jpg`;
+                }
+              }
+
+              return (
+                <div
+                  key={exerciseLog.id}
+                  // Added max-w-3xl and mx-auto to make the card less wide and centered
+                  className="bg-midnight-green rounded-lg mb-4 overflow-hidden shadow-md max-w-3xl mx-auto"
+                >
+                  <div className="bg-dark-slate-gray p-3">
+                    <h3 className="font-bold">
+                      {exerciseDetails?.name || "Unknown Exercise"}
+                    </h3>
+                  </div>
+                  <div className="p-4 flex flex-col md:flex-row md:flex- gap-4">
+                    {/* Thumbnail Section */}
+                    <div className="md:w-2/5 w-full">
+                      {currentThumbnailUrl !== defaultExerciseImage ||
+                      exerciseDetails?.imageUrl ? ( // Check if we have a specific URL (Vimeo or imageUrl)
+                        <img
+                          src={currentThumbnailUrl}
+                          alt={exerciseDetails?.name || "Exercise thumbnail"}
+                          className="w-full h-auto object-cover rounded-md "
+                          onError={(e) => {
+                            e.target.onerror = null; // Prevent infinite loop
+                            e.target.src = defaultExerciseImage; // Fallback to default image
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-32 md:h-full bg-gray-700 rounded-md flex items-center justify-center text-gray-500 aspect-square ">
+                          <FaImage size={40} />
+                          {/* Placeholder icon if only default image would be used and no imageUrl */}
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <p className="text-gray-400 italic text-sm">
-                      No sets recorded for this exercise.
-                    </p>
-                  )}
+
+                    {/* Sets Data Table Section */}
+                    <div className="flex-grow">
+                      {exerciseLog.setsData &&
+                      exerciseLog.setsData.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="text-gray-400 border-b border-gray-700">
+                                <th className="pb-2 text-left text-lg">Set</th>
+                                <th className="pb-2 text-right text-lg">
+                                  Weight
+                                </th>
+                                <th className="pb-2 text-right text-lg">
+                                  Reps
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {exerciseLog.setsData.map((set, index) => (
+                                <tr
+                                  key={`${exerciseLog.id}-set-${index}`}
+                                  className="border-b border-gray-800 last:border-b-0 text-lg text-goldenrod"
+                                >
+                                  <td className="py-2 text-left ">
+                                    {set.setNumber ?? index + 1}
+                                  </td>
+                                  <td className="py-2 text-right">
+                                    {set.weight !== undefined &&
+                                    set.weight !== null
+                                      ? `${set.weight} lbs`
+                                      : "-"}
+                                  </td>
+                                  <td className="py-2 text-right">
+                                    {set.reps ?? "-"}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <p className="text-gray-400 italic text-sm">
+                          No sets recorded for this exercise.
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="bg-midnight-green rounded-lg p-4 text-center text-gray-400">
               No exercises were logged for this workout.

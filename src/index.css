@@ -164,3 +164,7 @@ button {
       /* Darkest color towards the edges */
   );
 }
+
+canvas {
+  width: 40px;
+}

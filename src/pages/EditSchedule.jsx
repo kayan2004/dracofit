@@ -12,6 +12,7 @@ import {
   FaArrowLeft,
   FaCheckCircle,
   FaClock,
+  FaUndo, // Import the FaUndo icon
 } from "react-icons/fa";
 
 const DAYS_OF_WEEK = [
@@ -23,6 +24,57 @@ const DAYS_OF_WEEK = [
   { id: "saturday", label: "Saturday", shortLabel: "SAT" },
   { id: "sunday", label: "Sunday", shortLabel: "SUN" },
 ];
+
+// Helper function to enrich schedule entries with full workoutPlan objects
+const enrichScheduleEntries = (scheduleData, availableWorkouts) => {
+  if (
+    !scheduleData ||
+    !scheduleData.days || // Check for scheduleData.days
+    !Array.isArray(scheduleData.days) ||
+    !Array.isArray(availableWorkouts) ||
+    !availableWorkouts.length
+  ) {
+    console.log(
+      "Enrichment skipped: Invalid scheduleData, days array, or availableWorkouts",
+      { scheduleData, availableWorkouts }
+    );
+    return scheduleData;
+  }
+
+  const enrichedDays = scheduleData.days.map((day) => {
+    if (
+      !day.entries ||
+      !Array.isArray(day.entries) ||
+      day.entries.length === 0
+    ) {
+      return day; // Return day as is if no entries or invalid entries
+    }
+    const enrichedDayEntries = day.entries.map((entry) => {
+      if (
+        entry.workoutPlanId &&
+        (!entry.workoutPlan || !entry.workoutPlan.name) // Check if workoutPlan is missing or incomplete
+      ) {
+        const fullWorkoutPlan = availableWorkouts.find(
+          (w) => w.id === entry.workoutPlanId
+        );
+        if (fullWorkoutPlan) {
+          console.log(
+            `Enriching entry for day ${entry.dayOfWeek}, workoutPlanId ${entry.workoutPlanId} with:`,
+            fullWorkoutPlan
+          );
+          return { ...entry, workoutPlan: fullWorkoutPlan };
+        } else {
+          console.warn(
+            `Enrichment failed: Workout plan with ID ${entry.workoutPlanId} not found in availableWorkouts for day ${entry.dayOfWeek}.`
+          );
+        }
+      }
+      return entry;
+    });
+    return { ...day, entries: enrichedDayEntries };
+  });
+  return { ...scheduleData, days: enrichedDays };
+};
 
 const EditSchedule = () => {
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -53,17 +105,25 @@ const EditSchedule = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch available workouts
         const workoutsData = await workoutsService.getAllWorkouts();
         setWorkouts(workoutsData);
+        console.log(
+          "EditSchedule.jsx - Loaded workouts:",
+          JSON.parse(JSON.stringify(workoutsData))
+        );
 
-        // Fetch user's schedule
-        const scheduleData = await scheduleService.getSchedule();
-        setSchedule(scheduleData);
-
-        console.log("Loaded schedule:", scheduleData); // For debugging
+        const rawScheduleData = await scheduleService.getSchedule();
+        console.log(
+          "EditSchedule.jsx - Loaded schedule (RAW from service, direct object):",
+          rawScheduleData
+        );
+        const enrichedScheduleData = enrichScheduleEntries(
+          rawScheduleData,
+          workoutsData
+        );
+        setSchedule(enrichedScheduleData);
       } catch (err) {
-        console.error("Error loading data:", err);
+        console.error("EditSchedule.jsx - Error loading data:", err);
         setError("Failed to load schedule data. Please try again.");
       } finally {
         setLoading(false);
@@ -78,7 +138,6 @@ const EditSchedule = () => {
   // Handle editing a day
   const handleEditDay = (day) => {
     setEditingDay(day);
-    // Clear any previous success messages
     setSuccess(null);
   };
 
@@ -89,27 +148,27 @@ const EditSchedule = () => {
     try {
       setSaving(true);
       setError(null);
+      console.log(`Updating ${editingDay} with data:`, data);
 
-      console.log(`Updating ${editingDay} with data:`, data); // For debugging
-
-      // Call API to update the day
       await scheduleService.updateDay(editingDay, data);
 
-      // Refresh schedule data
-      const updatedSchedule = await scheduleService.getSchedule();
-      setSchedule(updatedSchedule);
+      const rawUpdatedSchedule = await scheduleService.getSchedule();
+      console.log(
+        "EditSchedule.jsx - Refreshed schedule after save (RAW from service, direct object):",
+        rawUpdatedSchedule
+      );
+      const enrichedUpdatedSchedule = enrichScheduleEntries(
+        rawUpdatedSchedule,
+        workouts
+      );
+      setSchedule(enrichedUpdatedSchedule);
 
-      // Show success message
       setSuccess(
         `${
           editingDay.charAt(0).toUpperCase() + editingDay.slice(1)
         } updated successfully`
       );
-
-      // Close editor
       setEditingDay(null);
-
-      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccess(null);
       }, 3000);
@@ -128,22 +187,25 @@ const EditSchedule = () => {
     }
 
     try {
-      setLoading(true);
+      setLoading(true); // Or setSaving(true) for consistency
       setError(null);
-
-      // Call API to clear the day
       await scheduleService.clearDay(day);
 
-      // Refresh schedule data
-      const updatedSchedule = await scheduleService.getSchedule();
+      let updatedSchedule = await scheduleService.getSchedule();
+      console.log(
+        "Refreshed schedule after clear (raw):",
+        JSON.parse(JSON.stringify(updatedSchedule))
+      );
+      updatedSchedule = enrichScheduleEntries(updatedSchedule, workouts); // Enrich here
+      console.log(
+        "Refreshed schedule after clear (enriched):",
+        JSON.parse(JSON.stringify(updatedSchedule))
+      );
       setSchedule(updatedSchedule);
 
-      // Show success message
       setSuccess(
         `${day.charAt(0).toUpperCase() + day.slice(1)} set as rest day`
       );
-
-      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccess(null);
       }, 3000);
@@ -151,7 +213,7 @@ const EditSchedule = () => {
       console.error("Error clearing day:", err);
       setError(`Failed to clear ${day}. Please try again.`);
     } finally {
-      setLoading(false);
+      setLoading(false); // Or setSaving(false)
     }
   };
 
@@ -166,20 +228,25 @@ const EditSchedule = () => {
     }
 
     try {
-      setLoading(true);
+      setLoading(true); // Or setSaving(true)
       setError(null);
-
-      // Call API to reset schedule
       await scheduleService.resetSchedule();
 
-      // Refresh schedule data
-      const updatedSchedule = await scheduleService.getSchedule();
+      let updatedSchedule = await scheduleService.getSchedule();
+      console.log(
+        "Refreshed schedule after reset (raw):",
+        JSON.parse(JSON.stringify(updatedSchedule))
+      );
+      // After a full reset, entries might not have workoutPlanId,
+      // so enrichment might not do much, but it's safe to call.
+      updatedSchedule = enrichScheduleEntries(updatedSchedule, workouts); // Enrich here
+      console.log(
+        "Refreshed schedule after reset (enriched):",
+        JSON.parse(JSON.stringify(updatedSchedule))
+      );
       setSchedule(updatedSchedule);
 
-      // Show success message
       setSuccess("Schedule has been reset");
-
-      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccess(null);
       }, 3000);
@@ -187,28 +254,53 @@ const EditSchedule = () => {
       console.error("Error resetting schedule:", err);
       setError("Failed to reset schedule. Please try again.");
     } finally {
-      setLoading(false);
+      setLoading(false); // Or setSaving(false)
     }
   };
 
   // Find entry for a specific day
-  const getDayEntry = (day) => {
-    if (!schedule || !schedule.entries) return null;
-    return schedule.entries.find((entry) => entry.dayOfWeek === day) || null;
+  const getDayEntry = (dayIdString) => {
+    // e.g., dayIdString = "monday" from DAYS_OF_WEEK.map
+    if (!schedule || !schedule.days || !Array.isArray(schedule.days)) {
+      // console.log("getDayEntry: schedule or schedule.days is invalid", schedule);
+      return null;
+    }
+    // Find the day object that matches the dayIdString (e.g., 'monday')
+    const dayObject = schedule.days.find((d) => d.dayOfWeek === dayIdString);
+    if (!dayObject) {
+      // console.log(`getDayEntry: No dayObject found for dayIdString: ${dayIdString}`);
+      return null;
+    }
+    if (
+      !dayObject.entries ||
+      !Array.isArray(dayObject.entries) ||
+      dayObject.entries.length === 0
+    ) {
+      // console.log(`getDayEntry: No entries found for day: ${dayIdString}`, dayObject);
+      return null;
+    }
+    // Assuming each day in schedule.days has an 'entries' array,
+    // and we are interested in the first entry for that day.
+    // If a day can have multiple schedule entries and you need specific logic, adjust here.
+    // console.log(`getDayEntry: Found entry for ${dayIdString}:`, dayObject.entries[0]);
+    return dayObject.entries[0]; // Return the first entry object
   };
 
   // Format time for display
   const formatTime = (timeString) => {
     if (!timeString) return null;
-
     try {
-      const timeDate = new Date(`2022-01-01T${timeString}`);
-      return timeDate.toLocaleTimeString([], {
+      const [hours, minutes] = timeString.split(":");
+      const date = new Date();
+      date.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+      return date.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
+        hour12: true, // Or false depending on preference
       });
     } catch (err) {
-      return timeString;
+      console.error("Error formatting time:", timeString, err);
+      return timeString; // Fallback
     }
   };
 
@@ -228,30 +320,41 @@ const EditSchedule = () => {
   return (
     <div className="min-h-screen bg-dark-slate-gray text-white p-6">
       <div className="max-w-5xl mx-auto">
-        <div className="flex items-center mb-2">
+        <div className="flex items-center justify-between mb-2">
+          {" "}
+          {/* Changed to justify-between */}
+          <div className="flex items-center">
+            {" "}
+            {/* Group for back button and title */}
+            <button
+              onClick={() => navigate("/schedule")}
+              className="text-goldenrod hover:text-dark-goldenrod transition-colors mr-3 text-xl" // Made icon slightly larger
+            >
+              <FaArrowLeft />
+            </button>
+            <h1 className="text-heading-1 text-goldenrod">
+              Edit Weekly Schedule
+            </h1>
+          </div>
           <button
-            onClick={() => navigate("/schedule")}
-            className="text-goldenrod hover:text-dark-goldenrod transition-colors mr-3"
+            onClick={handleResetSchedule}
+            title="Reset Entire Schedule"
+            className="text-midnight-green hover:text-midnight-green-darker transition-colors p-2 rounded-full"
           >
-            <FaArrowLeft />
+            <FaUndo size={20} /> {/* Added Reset Icon Button */}
           </button>
-          <h1 className="text-heading-1 text-goldenrod">
-            Edit Weekly Schedule
-          </h1>
         </div>
 
         <p className="text-gray mb-6">
           Assign workouts to specific days or leave them as rest days
         </p>
 
-        {/* Error Message */}
         {error && (
           <div className="bg-sepia/20 border border-sepia text-white p-4 rounded-lg mb-6">
             <p>{error}</p>
           </div>
         )}
 
-        {/* Success Message */}
         {success && (
           <div className="bg-green-800/20 border border-green-700 text-white p-4 rounded-lg mb-6 flex items-center">
             <FaCheckCircle className="text-green-500 mr-2" />
@@ -259,12 +362,11 @@ const EditSchedule = () => {
           </div>
         )}
 
-        {/* If we're editing a day, show the edit form */}
         {editingDay && (
           <div className="mb-8">
             <EditScheduleDay
               day={editingDay}
-              dayEntry={getDayEntry(editingDay)}
+              dayEntry={getDayEntry(editingDay)} // This will now pass the enriched entry
               workouts={workouts}
               onSave={handleSaveDay}
               onCancel={() => setEditingDay(null)}
@@ -273,12 +375,10 @@ const EditSchedule = () => {
           </div>
         )}
 
-        {/* Schedule Overview */}
         <div className="bg-midnight-green rounded-lg overflow-hidden shadow-lg mb-8">
           <div className="bg-goldenrod text-midnight-green font-bold p-4">
             Weekly Schedule Overview
           </div>
-
           <div className="p-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {DAYS_OF_WEEK.map((day) => {
@@ -288,10 +388,10 @@ const EditSchedule = () => {
                 return (
                   <div
                     key={day.id}
-                    className={`rounded-lg border ${
+                    className={`rounded-lg  ${
                       workout
-                        ? "bg-dark-slate-gray border-goldenrod/30"
-                        : "bg-gray-800 border-gray-700"
+                        ? "bg-dark-slate-gray "
+                        : "bg-midnight-green-darker"
                     } overflow-hidden shadow-md`}
                   >
                     <div
@@ -301,30 +401,26 @@ const EditSchedule = () => {
                     >
                       {day.label}
                     </div>
-
                     <div className="p-4">
-                      {workout ? (
+                      {workout && workout.name ? (
                         <>
                           <h3 className="font-bold text-white mb-2">
                             {workout.name}
                           </h3>
-
                           <div className="flex flex-wrap gap-2 mb-3">
                             <span className="px-2 py-1 bg-midnight-green rounded-full text-xs">
-                              {workout.type}
+                              {workout.type || "N/A"}
                             </span>
                             <span className="px-2 py-1 bg-midnight-green rounded-full text-xs">
-                              {workout.durationMinutes} mins
+                              {workout.durationMinutes || "N/A"} mins
                             </span>
                           </div>
-
                           {entry.preferredTime && (
                             <div className="text-goldenrod text-sm flex items-center mb-3">
                               <FaClock className="mr-1" />
                               {formatTime(entry.preferredTime)}
                             </div>
                           )}
-
                           {entry.notes && (
                             <p className="text-gray-300 text-sm italic mb-3">
                               {entry.notes}
@@ -334,17 +430,15 @@ const EditSchedule = () => {
                       ) : (
                         <p className="text-gray-400 italic mb-4">Rest Day</p>
                       )}
-
                       <div className="flex space-x-2 mt-2">
                         <button
                           onClick={() => handleEditDay(day.id)}
                           className="flex items-center px-2 py-1 bg-goldenrod text-midnight-green rounded hover:bg-dark-goldenrod text-sm"
                         >
                           <FaEdit className="mr-1" />
-                          {workout ? "Edit" : "Add"}
+                          {workout && workout.name ? "Edit" : "Add"}
                         </button>
-
-                        {workout && (
+                        {workout && workout.name && (
                           <button
                             onClick={() => handleClearDay(day.id)}
                             className="flex items-center px-2 py-1 bg-sepia text-white rounded hover:bg-dark-sepia text-sm"
@@ -359,16 +453,6 @@ const EditSchedule = () => {
               })}
             </div>
           </div>
-        </div>
-
-        {/* Reset Schedule Button */}
-        <div className="flex justify-center mt-4">
-          <SecondaryButton
-            onClick={handleResetSchedule}
-            styles="bg-sepia hover:bg-dark-sepia"
-          >
-            Reset Entire Schedule
-          </SecondaryButton>
         </div>
       </div>
     </div>

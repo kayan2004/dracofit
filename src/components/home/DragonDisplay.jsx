@@ -3,12 +3,14 @@ import PropTypes from "prop-types";
 import { motion } from "framer-motion";
 
 const DragonDisplay = ({
-  level,
-  stage = "baby",
+  level = 1,
+  stage = "adult",
   animation = "idle",
   name = "dragon",
+  onClick, // Add onClick prop
 }) => {
   // Track which of our two images is currently active
+  console.log(stage, animation);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   // Images array stores exactly two image sources
@@ -25,21 +27,25 @@ const DragonDisplay = ({
   // Stage-specific animation configurations
   const animationConfigs = {
     baby: {
+      //done
       idle: {
         totalFrames: 4,
-        frameDurations: [5000, 300, 2000, 300],
+        frameDurations: [3000, 300, 2000, 300],
         sequence: [1, 2, 3, 4, 3, 4, 3, 4, 3, 4, 3, 2],
       },
+      // done
       happy: {
-        totalFrames: 6,
-        frameDurations: [200, 300, 400, 500, 300, 400],
-        sequence: [1, 2, 3, 2, 3, 4, 5, 6, 5, 6],
+        totalFrames: 4,
+        frameDurations: [3000, 300, 1000, 1000],
+        sequence: [1, 2, 3, 4, 3, 4, 3, 4, 2],
       },
+      // done
       sad: {
         totalFrames: 4,
-        frameDurations: [500, 700, 600, 1000],
-        sequence: [1, 2, 3, 4, 3, 2],
+        frameDurations: [3000, 500, 500, 1000],
+        sequence: [1, 2, 3, 4, 2, 3, 4, 2, 3, 4],
       },
+      // done
       dead: {
         totalFrames: 1,
         frameDurations: [1000],
@@ -47,21 +53,25 @@ const DragonDisplay = ({
       },
     },
     teen: {
+      //done
       idle: {
         totalFrames: 4,
-        frameDurations: [5000, 400, 1500, 400],
-        sequence: [1, 2, 3, 4, 3, 2, 3, 2],
+        frameDurations: [3000, 300, 2000, 300],
+        sequence: [1, 2, 3, 4, 3, 4, 3, 4, 3, 4, 3, 2],
       },
+      // done
       happy: {
-        totalFrames: 5,
-        frameDurations: [200, 300, 400, 400, 300],
-        sequence: [1, 2, 3, 4, 5, 4, 3, 4, 5, 4, 3, 2],
+        totalFrames: 4,
+        frameDurations: [3000, 300, 1000, 1000],
+        sequence: [1, 2, 3, 4, 3, 4, 3, 4, 2],
       },
+      //done
       sad: {
         totalFrames: 4,
-        frameDurations: [500, 600, 800, 900],
-        sequence: [1, 2, 3, 4, 3, 2, 1],
+        frameDurations: [3000, 500, 500, 2000],
+        sequence: [1, 2, 3, 4, 2, 3, 4, 2, 3, 4],
       },
+      //done
       dead: {
         totalFrames: 1,
         frameDurations: [1000],
@@ -69,21 +79,28 @@ const DragonDisplay = ({
       },
     },
     adult: {
+      //done
       idle: {
         totalFrames: 3,
-        frameDurations: [5000, 500, 2000],
-        sequence: [1, 2, 3, 2],
+        frameDurations: [3000, 6000, 500],
+        sequence: [1, 2, 3, 2, 3, 2, 3, 2, 3],
       },
+      //done
       happy: {
-        totalFrames: 5, // Assuming different frame count
-        frameDurations: [200, 300, 400, 300, 200],
-        sequence: [1, 2, 3, 4, 5, 4, 3, 2],
-      },
-      sad: {
         totalFrames: 3, // Assuming different frame count
-        frameDurations: [500, 700, 1000],
+        frameDurations: [3000, 300, 3000, 300, 3000],
         sequence: [1, 2, 3, 2, 1],
       },
+      //done
+      sad: {
+        totalFrames: 7, // Assuming different frame count
+        frameDurations: [
+          3000, 300, 300, 300, 300, 1500, 1500, 1500, 1500, 1500, 1500, 300,
+          300, 300,
+        ],
+        sequence: [1, 2, 3, 4, 5, 6, 7, 6, 7, 6, 7, 6, 5, 4],
+      },
+      //done
       dead: {
         totalFrames: 1,
         frameDurations: [1000],
@@ -247,72 +264,86 @@ const DragonDisplay = ({
     animateNextFrame();
   };
 
+  // You might want to show some static image or text if lottieAnimation is null
   return (
-    <div className="w-44 h-44 flex justify-center items-center md:h-64 md:w-64">
-      <div className="text-center w-full">
-        {/* Loading indicator */}
-        {isLoading && (
-          <div className="flex justify-center items-center h-48">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-goldenrod"></div>
-          </div>
-        )}
+    <div
+      onClick={onClick} // Apply the onClick handler to the main wrapper
+      className="dragon-container cursor-pointer" // Add cursor-pointer if appropriate
+      role="button" // Add role for accessibility if it's interactive
+      tabIndex={onClick ? 0 : -1} // Make it focusable if clickable
+      onKeyDown={
+        onClick
+          ? (e) => (e.key === "Enter" || e.key === " ") && onClick()
+          : undefined
+      } // Keyboard accessibility
+      aria-label={onClick ? "Dragon, click to interact" : "Dragon display"}
+    >
+      <div className="w-44 h-44 flex justify-center items-center md:h-64 md:w-64">
+        <div className="text-center w-full">
+          {/* Loading indicator */}
+          {isLoading && (
+            <div className="flex justify-center items-center h-48">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-goldenrod"></div>
+            </div>
+          )}
 
-        {/* Dragon animation with cross-fade using TWO images only */}
-        {!isLoading && !imageError && (
-          <div className="h-48 relative flex justify-center items-center">
-            {/* Image A - First slot */}
-            <img
-              src={images[0]}
-              alt={`Dragon frame ${
-                activeImageIndex === 0 ? "active" : "inactive"
-              }`}
-              className="absolute max-w-full max-h-48"
-              style={{
-                opacity: activeImageIndex === 0 ? 1 : 0,
-                transition: "opacity 0.1s ease-in-out",
-              }}
-            />
+          {/* Dragon animation with cross-fade using TWO images only */}
+          {!isLoading && !imageError && (
+            <div className="h-48 relative flex justify-center items-center">
+              {/* Image A - First slot */}
+              <img
+                src={images[0]}
+                alt={`Dragon frame ${
+                  activeImageIndex === 0 ? "active" : "inactive"
+                }`}
+                className="absolute max-w-full max-h-48"
+                style={{
+                  opacity: activeImageIndex === 0 ? 1 : 0,
+                  transition: "opacity 0.1s ease-in-out",
+                }}
+              />
 
-            {/* Image B - Second slot */}
-            <img
-              src={images[1]}
-              alt={`Dragon frame ${
-                activeImageIndex === 1 ? "active" : "inactive"
-              }`}
-              className="absolute max-w-full max-h-48"
-              style={{
-                opacity: activeImageIndex === 1 ? 1 : 0,
-                transition: "opacity 0.1s ease-in-out",
-              }}
-            />
+              {/* Image B - Second slot */}
+              <img
+                src={images[1]}
+                alt={`Dragon frame ${
+                  activeImageIndex === 1 ? "active" : "inactive"
+                }`}
+                className="absolute max-w-full max-h-48"
+                style={{
+                  opacity: activeImageIndex === 1 ? 1 : 0,
+                  transition: "opacity 0.1s ease-in-out",
+                }}
+              />
 
-            {/* Invisible placeholder to maintain height */}
-            <div className="invisible max-w-full max-h-48"></div>
-          </div>
-        )}
+              {/* Invisible placeholder to maintain height */}
+              <div className="invisible max-w-full max-h-48"></div>
+            </div>
+          )}
 
-        {/* Error fallback */}
-        {!isLoading && imageError && (
-          <div className="h-48 flex justify-center items-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="text-5xl"
-            >
-              🐉
-            </motion.div>
-          </div>
-        )}
+          {/* Error fallback */}
+          {!isLoading && imageError && (
+            <div className="h-48 flex justify-center items-center">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className="text-5xl"
+              >
+                🐉
+              </motion.div>
+            </div>
+          )}
 
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="text-goldenrod mt-4 font-bold"
-        >
-          {name} • Level {level}
-        </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-goldenrod mt-4 font-bold"
+          >
+            Level {level}
+          </motion.p>
+        </div>
       </div>
     </div>
   );
