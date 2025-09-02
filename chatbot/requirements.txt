@@ -1,0 +1,9 @@
+flask
+flask-cors
+werkzeug
+transformers
+torch
+huggingface_hub
+# bitsandbytes # Likely not needed if BNB_LOAD_IN_8BIT is False
+accelerate # Good practice to include with transformers
+gunicorn # Or waitress if you prefer for running Flask
